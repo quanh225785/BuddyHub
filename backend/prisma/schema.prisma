@@ -7,11 +7,240 @@ datasource db {
   provider = "postgresql"
 }
 
+// ================================================================
+// ENUMS
+// ================================================================
+
+// Mục đích của mã xác thực email — tránh dùng nhầm OTP giữa các luồng
+enum VerificationPurpose {
+  REGISTER        // Xác thực khi đăng ký tài khoản mới
+  RESET_PASSWORD  // Xác thực khi đặt lại mật khẩu
+}
+
+// Trạng thái vòng đời của một hoạt động
+enum ActivityStatus {
+  OPEN      // Đang mở, còn chỗ trống
+  FULL      // Đủ người (currentSlots = maxSlots), không nhận thêm
+  CLOSED    // Host chủ động đóng đăng ký sớm
+  CANCELLED // Hoạt động bị hủy
+  FINISHED  // Hoạt động đã diễn ra xong
+}
+
+// Trạng thái tham gia của từng người trong một hoạt động
+enum ParticipantStatus {
+  JOINED    // Đang tham gia bình thường
+  CANCELLED // Tự rời khỏi hoạt động
+  REMOVED   // Bị host kick
+}
+
+// ================================================================
+// MODEL: User — Người dùng
+// ================================================================
+
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  name      String
+  id           String   @id @default(uuid())
+  email        String   @unique  // Chỉ chấp nhận @sis.hust.edu.vn (validate ở app layer)
+  passwordHash String
+  name         String
+  avatarUrl    String?
+  bio          String?
+  faculty      String?    // Ngành học, ví dụ: "Công nghệ thông tin"
+  schoolYear   Int?       // Năm học (1–6)
+  isVerified   Boolean  @default(false)  // true = đã xác thực email → hiện badge "HUST Verified"
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // [1-n] 1 user tạo nhiều hoạt động với vai trò host
+  hostedActivities Activity[] @relation("ActivityHost")
+
+  // [n-n] 1 user tham gia nhiều hoạt động, qua bảng trung gian ActivityParticipant
+  participations ActivityParticipant[]
+
+  // [n-n] 1 user có nhiều sở thích, qua bảng trung gian UserInterest → InterestTag
+  interests UserInterest[]
+
+  // [1-n] 1 user có thể có nhiều mã OTP (mỗi lần gửi lại tạo record mới)
+  verificationCodes EmailVerificationCode[]
+
+  @@index([email])
+  @@index([faculty])
+  @@index([schoolYear])
+}
+
+// ================================================================
+// MODEL: EmailVerificationCode — Mã xác thực email
+//
+// Quan hệ: n-1 về phía User (nhiều mã → 1 user)
+// Mỗi lần gửi lại OTP = tạo record mới, record cũ vẫn giữ
+// → Kiểm tra code + expiresAt + usedAt khi xác thực
+// ================================================================
+
+model EmailVerificationCode {
+  id        String              @id @default(uuid())
+  userId    String
+  code      String              // Mã OTP 6 chữ số (hoặc token dài cho email link)
+  purpose   VerificationPurpose @default(REGISTER)
+  expiresAt DateTime            // Thời điểm hết hạn
+  usedAt    DateTime?           // null = chưa dùng, có giá trị = đã dùng rồi
+  createdAt DateTime            @default(now())
+
+  // [n-1] Nhiều mã xác thực thuộc về 1 user
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([code])
+  @@index([expiresAt])
+}
+
+// ================================================================
+// MODEL: ActivityCategory — Danh mục hoạt động
+//
+// Quan hệ: 1-n với Activity (1 danh mục chứa nhiều hoạt động)
+// Dùng bảng riêng thay vì enum → admin thêm/sửa danh mục không cần migrate DB
+// Seed sẵn: Ăn uống, Học nhóm, Board Games, Thể thao, Giao lưu, Khác
+// ================================================================
+
+model ActivityCategory {
+  id          String  @id @default(uuid())
+  name        String  @unique  // Tên danh mục, ví dụ: "Học nhóm"
+  description String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // [1-n] 1 danh mục chứa nhiều hoạt động
+  activities Activity[]
+}
+
+// ================================================================
+// MODEL: InterestTag — Tag sở thích
+//
+// Dùng CHUNG cho cả User và Activity:
+//   User gắn tag → "tôi thích cái này"
+//   Activity gắn tag → "hoạt động này dành cho ai thích cái này"
+// → Cơ sở để filter "sở thích chung" giữa người dùng và hoạt động
+// ================================================================
+
+model InterestTag {
+  id        String   @id @default(uuid())
+  name      String   @unique  // Ví dụ: "Cờ vua", "Âm nhạc", "Lập trình"
+  createdAt DateTime @default(now())
+
+  // [n-n] Tag này được gắn với nhiều user (qua UserInterest)
+  users UserInterest[]
+
+  // [n-n] Tag này được gắn với nhiều hoạt động (qua ActivityInterest)
+  activities ActivityInterest[]
+}
+
+// ================================================================
+// MODEL: UserInterest — Bảng trung gian User ↔ InterestTag
+//
+// Quan hệ: n-n giữa User và InterestTag
+// 1 user có nhiều tag sở thích, 1 tag được nhiều user chọn
+// ================================================================
+
+model UserInterest {
+  userId     String
+  interestId String
+  createdAt  DateTime @default(now())
+
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  interest InterestTag @relation(fields: [interestId], references: [id], onDelete: Cascade)
+
+  @@id([userId, interestId])
+  @@index([interestId])
+}
+
+// ================================================================
+// MODEL: Activity — Hoạt động
+//
+// Quan hệ:
+//   n-1 với User (nhiều hoạt động do 1 user tạo, vai trò host)
+//   n-1 với ActivityCategory (nhiều hoạt động thuộc 1 danh mục)
+//   n-n với User qua ActivityParticipant (nhiều người tham gia)
+//   n-n với InterestTag qua ActivityInterest (gắn tag sở thích)
+// ================================================================
+
+model Activity {
+  id         String @id @default(uuid())
+  hostId     String
+  categoryId String
+
+  title       String
+  purpose     String?   // Mục đích ngắn gọn, ví dụ: "Ôn thi cuối kỳ môn Giải tích"
+  location    String    // Tên địa điểm, ví dụ: "Thư viện Tạ Quang Bửu - Phòng B3"
+  latitude    Float?    // Toạ độ GPS (tuỳ chọn, dùng cho tính năng bản đồ sau này)
+  longitude   Float?
+  startTime   DateTime  // Thời gian bắt đầu hoạt động
+  deadline    DateTime  // Hạn chót đăng ký tham gia
+  maxSlots    Int       // Số người tối đa
+  chatLink    String?   // Link nhóm Telegram/Zalo để liên lạc sau khi tham gia
+  description String?   // Mô tả chi tiết
+  status      ActivityStatus @default(OPEN)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // [n-1] Nhiều hoạt động do 1 user tạo (host)
+  host User @relation("ActivityHost", fields: [hostId], references: [id], onDelete: Cascade)
+
+  // [n-1] Nhiều hoạt động thuộc 1 danh mục
+  category ActivityCategory @relation(fields: [categoryId], references: [id])
+
+  // [n-n] 1 hoạt động có nhiều người tham gia (qua ActivityParticipant)
+  participants ActivityParticipant[]
+
+  // [n-n] 1 hoạt động được gắn nhiều tag sở thích (qua ActivityInterest)
+  interests ActivityInterest[]
+
+  @@index([hostId])
+  @@index([categoryId])
+  @@index([startTime])
+  @@index([deadline])
+  @@index([status])
+  @@index([location])
+}
+
+// ================================================================
+// MODEL: ActivityInterest — Bảng trung gian Activity ↔ InterestTag
+//
+// Quan hệ: n-n giữa Activity và InterestTag
+// 1 hoạt động có nhiều tag, 1 tag xuất hiện ở nhiều hoạt động
+// ================================================================
+
+model ActivityInterest {
+  activityId String
+  interestId String
+  createdAt  DateTime @default(now())
+
+  activity Activity    @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  interest InterestTag @relation(fields: [interestId], references: [id], onDelete: Cascade)
+
+  @@id([activityId, interestId])
+  @@index([interestId])
+}
+
+// ================================================================
+// MODEL: ActivityParticipant — Bảng trung gian Activity ↔ User (người tham gia)
+//
+// Quan hệ: n-n giữa Activity và User
+// 1 user tham gia nhiều hoạt động, 1 hoạt động có nhiều người tham gia
+// Không xóa record khi rời → dùng status để track lịch sử
+// ================================================================
+
+model ActivityParticipant {
+  activityId  String
+  userId      String
+  status      ParticipantStatus @default(JOINED)
+  joinedAt    DateTime          @default(now())
+  cancelledAt DateTime?  // Thời điểm rời/bị kick, null nếu vẫn đang tham gia
+
+  activity Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([activityId, userId])
+  @@index([userId])
+  @@index([activityId])
+  @@index([status])
 }

@@ -174,6 +174,7 @@ model Activity {
   latitude    Float?    // Toạ độ GPS (tuỳ chọn, dùng cho tính năng bản đồ sau này)
   longitude   Float?
   startTime   DateTime  // Thời gian bắt đầu hoạt động
+  endTime     DateTime? // Thời gian kết thúc hoạt động (nếu UI gửi)
   deadline    DateTime  // Hạn chót đăng ký tham gia
   maxSlots    Int       // Số người tối đa
   chatLink    String?   // Link nhóm Telegram/Zalo để liên lạc sau khi tham gia

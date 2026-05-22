@@ -1,10 +1,10 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // ================================================================
@@ -40,12 +40,13 @@ enum ParticipantStatus {
 model User {
   id           String   @id @default(uuid())
   email        String   @unique  // Chỉ chấp nhận @sis.hust.edu.vn (validate ở app layer)
+  studentId    String   @unique  // MSSV, trích tự động từ email, khóa không cho đổi
   passwordHash String
   name         String
   avatarUrl    String?
   bio          String?
   faculty      String?    // Ngành học, ví dụ: "Công nghệ thông tin"
-  schoolYear   Int?       // Năm học (1–6)
+  schoolYear   Int?       // Năm học (1–6), tính tự động từ email
   isVerified   Boolean  @default(false)  // true = đã xác thực email → hiện badge "HUST Verified"
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -77,17 +78,17 @@ model User {
 
 model EmailVerificationCode {
   id        String              @id @default(uuid())
-  userId    String
-  code      String              // Mã OTP 6 chữ số (hoặc token dài cho email link)
+  email     String              // Email nhận OTP (dùng thay userId vì user chưa tồn tại lúc REGISTER)
+  userId    String?             // null khi REGISTER, có giá trị khi RESET_PASSWORD
+  code      String              // Mã OTP 6 chữ số
   purpose   VerificationPurpose @default(REGISTER)
   expiresAt DateTime            // Thời điểm hết hạn
   usedAt    DateTime?           // null = chưa dùng, có giá trị = đã dùng rồi
   createdAt DateTime            @default(now())
 
-  // [n-1] Nhiều mã xác thực thuộc về 1 user
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
+  @@index([email])
   @@index([code])
   @@index([expiresAt])
 }

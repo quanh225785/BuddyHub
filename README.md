@@ -147,13 +147,13 @@ git push origin ten/feature/mo-ta-tinh-nang
 
 ### Quy trình trước khi merge
 
-> **Không tự merge.** Mọi PR phải được TL review và merge.
+> **Không tự merge.** Mọi PR phải được TL hoặc SL review và merge.
 
 1. Push code lên branch của mình
 2. **Dùng AI (Claude / Copilot) review code trước** — kiểm tra logic, lỗi, code style
 3. Sửa các vấn đề AI chỉ ra
 4. Tạo Pull Request vào `main` trên GitHub
-5. Báo TL để TL review lần cuối và merge
+5. Báo TL/SL để TL/SL review lần cuối và merge
 
 ---
 

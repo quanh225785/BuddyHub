@@ -3,7 +3,7 @@ import {
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { ActivityStatus, ParticipantStatus, Prisma } from '@prisma/client';
+import { ActivityStatus, Gender, ParticipantStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateActivityDto } from './dto/create-activity.dto';
 import { GetActivitiesQueryDto } from './dto/get-activities-query.dto';
@@ -43,6 +43,12 @@ const ALL_CATEGORY_VALUES = new Set(['all', 'tất cả']);
 const ALL_TIME_VALUES = new Set(['all', 'all_time', 'tất cả thời gian']);
 const VALID_TIME_FILTERS = new Set(['today', 'tomorrow', 'this_week']);
 
+const GENDER_MAP = new Map<string, Gender>([
+  ['male', Gender.MALE],
+  ['female', Gender.FEMALE],
+  ['all', Gender.ALL],
+]);
+
 interface ValidatedActivityInput {
   categoryName: string;
   title: string;
@@ -54,6 +60,8 @@ interface ValidatedActivityInput {
   deadline: Date;
   chatLink: string;
   description?: string;
+  gender: Gender;
+  interestIds: string[];
 }
 
 interface UserLocation {
@@ -69,6 +77,11 @@ type ActivityListItem = Prisma.ActivityGetPayload<{
         id: true;
         name: true;
         avatarUrl: true;
+      };
+    };
+    interests: {
+      include: {
+        interest: true;
       };
     };
     _count: {
@@ -88,6 +101,8 @@ export class ActivitiesService {
       const keyword = this.getKeyword(query);
       const categoryName = this.getFilterCategoryName(query);
       const timeRange = this.getTimeRange(query);
+      const gender = this.getGender(query);
+      const interestIds = await this.getInterestIds(query);
       const userLocation = this.getUserLocation(query);
 
       const where: Prisma.ActivityWhereInput = {
@@ -114,6 +129,16 @@ export class ActivitiesService {
         };
       }
 
+      if (gender) {
+        where.gender = gender;
+      }
+
+      if (interestIds && interestIds.length > 0) {
+        where.interests = {
+          some: { interestId: { in: interestIds } },
+        };
+      }
+
       const activities = await this.prisma.activity.findMany({
         where,
         include: {
@@ -123,6 +148,11 @@ export class ActivitiesService {
               id: true,
               name: true,
               avatarUrl: true,
+            },
+          },
+          interests: {
+            include: {
+              interest: true,
             },
           },
           _count: {
@@ -147,6 +177,17 @@ export class ActivitiesService {
   async create(hostId: string, dto: CreateActivityDto) {
     try {
       const input = this.validateCreateActivity(dto);
+
+      if (input.interestIds.length > 0) {
+        const found = await this.prisma.interestTag.findMany({
+          where: { id: { in: input.interestIds } },
+          select: { id: true },
+        });
+        if (found.length !== input.interestIds.length) {
+          throw this.error();
+        }
+      }
+
       const category = await this.prisma.activityCategory.upsert({
         where: { name: input.categoryName },
         update: {},
@@ -166,6 +207,15 @@ export class ActivitiesService {
           deadline: input.deadline,
           chatLink: input.chatLink,
           description: input.description,
+          gender: input.gender,
+          interests:
+            input.interestIds.length > 0
+              ? {
+                  create: input.interestIds.map((interestId) => ({
+                    interestId,
+                  })),
+                }
+              : undefined,
         },
       });
 
@@ -214,6 +264,11 @@ export class ActivitiesService {
         currentParticipants: activity._count.participants,
         description: activity.description,
         status: activity.status,
+        gender: activity.gender,
+        interests: activity.interests.map((item) => ({
+          id: item.interest.id,
+          name: item.interest.name,
+        })),
         host: activity.host,
         distanceKm,
       };
@@ -257,6 +312,8 @@ export class ActivitiesService {
       'groupChatLink',
     ]);
     const description = this.getOptionalString(dto, ['description']);
+    const gender = this.getCreateGender(dto);
+    const interestIds = this.getCreateInterestIds(dto);
 
     if (deadline >= startTime) {
       throw this.error();
@@ -285,7 +342,29 @@ export class ActivitiesService {
       deadline,
       chatLink,
       description,
+      gender,
+      interestIds,
     };
+  }
+
+  private getCreateGender(dto: CreateActivityDto): Gender {
+    const rawGender = this.getOptionalString(dto, ['gender']);
+    if (!rawGender) return Gender.ALL;
+
+    const gender = GENDER_MAP.get(this.normalize(rawGender));
+    if (!gender) {
+      throw this.error();
+    }
+
+    return gender;
+  }
+
+  private getCreateInterestIds(dto: CreateActivityDto): string[] {
+    const rawValue = this.findFirstValue(dto, ['interests']);
+    if (rawValue === undefined) return [];
+
+    const ids = this.parseStringArray(rawValue);
+    return Array.from(new Set(ids));
   }
 
   private getKeyword(query: GetActivitiesQueryDto) {
@@ -354,6 +433,57 @@ export class ActivitiesService {
     }
 
     return { from: today, to: this.startOfNextWeek(today) };
+  }
+
+  private getGender(query: GetActivitiesQueryDto): Gender | undefined {
+    const rawGender = this.getOptionalString(query, ['gender']);
+    if (!rawGender) return undefined;
+
+    const gender = GENDER_MAP.get(this.normalize(rawGender));
+    if (!gender) {
+      throw this.error();
+    }
+
+    return gender;
+  }
+
+  private async getInterestIds(
+    query: GetActivitiesQueryDto,
+  ): Promise<string[] | undefined> {
+    const rawValue = this.findFirstValue(query, ['interests']);
+    if (rawValue === undefined) return undefined;
+
+    const ids = this.parseStringArray(rawValue);
+    if (ids.length === 0) return undefined;
+
+    const uniqueIds = Array.from(new Set(ids));
+    const found = await this.prisma.interestTag.findMany({
+      where: { id: { in: uniqueIds } },
+      select: { id: true },
+    });
+
+    if (found.length !== uniqueIds.length) {
+      throw this.error();
+    }
+
+    return uniqueIds;
+  }
+
+  private parseStringArray(value: unknown): string[] {
+    const collect = (input: unknown): string[] => {
+      if (Array.isArray(input)) {
+        return input.flatMap((item) => collect(item));
+      }
+      if (typeof input === 'string') {
+        return input
+          .split(',')
+          .map((part) => part.trim())
+          .filter((part) => part.length > 0);
+      }
+      throw this.error();
+    };
+
+    return collect(value);
   }
 
   private getUserLocation(query: GetActivitiesQueryDto) {

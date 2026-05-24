@@ -33,6 +33,13 @@ enum ParticipantStatus {
   REMOVED   // Bị host kick
 }
 
+// Giới tính áp dụng cho hoạt động (host giới hạn ai được tham gia)
+enum Gender {
+  MALE
+  FEMALE
+  ALL
+}
+
 // ================================================================
 // MODEL: User — Người dùng
 // ================================================================
@@ -47,6 +54,7 @@ model User {
   bio          String?
   faculty      String?    // Ngành học, ví dụ: "Công nghệ thông tin"
   schoolYear   Int?       // Năm học (1–6), tính tự động từ email
+  gender       Gender?    // Giới tính người dùng. Nullable cho data cũ. App-layer chỉ chấp nhận MALE/FEMALE
   isVerified   Boolean  @default(false)  // true = đã xác thực email → hiện badge "HUST Verified"
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -179,6 +187,7 @@ model Activity {
   maxSlots    Int       // Số người tối đa
   chatLink    String?   // Link nhóm Telegram/Zalo để liên lạc sau khi tham gia
   description String?   // Mô tả chi tiết
+  gender      Gender         @default(ALL) // Giới hạn giới tính tham gia
   status      ActivityStatus @default(OPEN)
 
   createdAt DateTime @default(now())

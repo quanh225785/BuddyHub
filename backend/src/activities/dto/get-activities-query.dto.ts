@@ -42,4 +42,10 @@ export class GetActivitiesQueryDto {
 
   @Allow()
   currentLng?: unknown;
+
+  @Allow()
+  gender?: unknown;
+
+  @Allow()
+  interests?: unknown;
 }

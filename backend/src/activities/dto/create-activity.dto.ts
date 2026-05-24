@@ -90,4 +90,10 @@ export class CreateActivityDto {
 
   @Allow()
   description?: unknown;
+
+  @Allow()
+  gender?: unknown;
+
+  @Allow()
+  interests?: unknown;
 }

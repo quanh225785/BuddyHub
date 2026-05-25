@@ -1,4 +1,4 @@
-import type { Banner } from './types'
+import type { Banner } from '../../types/auth'
 import { ShieldCheckIcon } from './icons'
 
 type VerifyScreenProps = {

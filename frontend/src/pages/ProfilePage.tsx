@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import api from '../lib/axios'
-import './MyProfile.css'
+import { getDashboard, updateProfile } from '../api'
+import './ProfilePage.css'
 
 type DashboardActivity = {
   id: string
@@ -22,6 +22,7 @@ type DashboardResponse = {
     name: string
     faculty?: string | null
     schoolYear?: number | null
+    gender?: 'MALE' | 'FEMALE' | 'ALL' | null
     avatarUrl?: string | null
     bio?: string | null
     interests: string[]
@@ -60,7 +61,13 @@ function roleClass(role: 'host' | 'joined') {
   return role === 'host' ? 'is-host' : 'is-joined'
 }
 
-export default function MyProfile() {
+function formatGender(value?: 'MALE' | 'FEMALE' | 'ALL' | null) {
+  if (value === 'MALE') return 'Nam'
+  if (value === 'FEMALE') return 'Nữ'
+  return 'Chưa cập nhật'
+}
+
+export default function ProfilePage() {
   const [dashboard, setDashboard] = useState<DashboardResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -78,10 +85,9 @@ export default function MyProfile() {
         setLoading(true)
         setError(null)
 
-        const response = await api.get('/users/me/dashboard')
+        const data = (await getDashboard()) as DashboardResponse
         if (!alive) return
 
-        const data = response.data as DashboardResponse
         setDashboard(data)
         setDraft({
           name: data.profile.name,
@@ -104,6 +110,7 @@ export default function MyProfile() {
   }, [])
 
   const profile = dashboard?.profile
+  const genderLabel = formatGender(profile?.gender)
   const upcomingActivities = dashboard?.activities.upcoming ?? []
   const historyActivities = dashboard?.activities.history ?? []
   const visibleActivities = activeTab === 'upcoming' ? upcomingActivities : historyActivities
@@ -166,10 +173,10 @@ export default function MyProfile() {
         interests: draft.interests,
       }
 
-      await api.put('/users/me/profile', payload)
+      await updateProfile(payload)
 
-      const response = await api.get('/users/me/dashboard')
-      setDashboard(response.data as DashboardResponse)
+      const data = (await getDashboard()) as DashboardResponse
+      setDashboard(data)
       setEditing(false)
     } catch (e: any) {
       setSaveError(e?.response?.data?.message || e?.message || 'Không thể lưu hồ sơ')
@@ -212,6 +219,7 @@ export default function MyProfile() {
               {draft.faculty || 'Chưa cập nhật khoa / viện'}
               {draft.schoolYear ? ` · Năm ${draft.schoolYear}` : ''}
             </div>
+            <div className="meta-line">Giới tính: {genderLabel}</div>
           </div>
 
           <div className="action">

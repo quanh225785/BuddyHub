@@ -11,7 +11,13 @@ export function MailIcon({ className }: IconProps) {
         strokeWidth="1.8"
         strokeLinejoin="round"
       />
-      <path d="m3.5 7.5 8.2 6.1a.9.9 0 0 0 1.1 0l7.7-6.1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="m3.5 7.5 8.2 6.1a.9.9 0 0 0 1.1 0l7.7-6.1"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   )
 }
@@ -25,7 +31,13 @@ export function ShieldCheckIcon({ className }: IconProps) {
         strokeWidth="1.8"
         strokeLinejoin="round"
       />
-      <path d="m9.1 12.1 1.8 1.8 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="m9.1 12.1 1.8 1.8 4-4"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   )
 }

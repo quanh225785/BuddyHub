@@ -1,4 +1,4 @@
-import type { Banner, FieldErrors, ProfileForm } from './types'
+import type { Banner, FieldErrors, ProfileForm } from '../../types/auth'
 import { UserIcon } from './icons'
 
 type ProfileScreenProps = {

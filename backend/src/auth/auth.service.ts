@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { randomInt } from 'crypto';
+import { Gender } from '@prisma/client';
 
 import * as bcrypt from 'bcrypt';
 import * as nodemailer from 'nodemailer';
@@ -153,8 +154,11 @@ export class AuthService implements OnModuleInit {
     const { studentId, schoolYear } = this.parseHustEmail(email);
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
+    const normalizedGender = dto.gender.toLowerCase();
+    const gender = normalizedGender === 'male' ? Gender.MALE : Gender.FEMALE;
+
     const user = await this.prisma.user.create({
-      data: { email, studentId, passwordHash, name: dto.name, schoolYear, isVerified: true },
+      data: { email, studentId, passwordHash, name: dto.name, schoolYear, gender, isVerified: true },
     });
 
     const accessToken = this.jwt.sign({ sub: user.id, email: user.email });

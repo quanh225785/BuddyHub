@@ -8,6 +8,7 @@ export type LoginForm = {
 export type RegisterForm = {
   name: string
   email: string
+  gender: 'male' | 'female' | ''
   password: string
   confirmPassword: string
 }
@@ -24,6 +25,7 @@ export type RegistrationSession = {
   email: string
   password: string
   name: string
+  gender: 'male' | 'female'
   tempToken: string
   prefill: {
     firstName: string

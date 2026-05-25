@@ -1,4 +1,4 @@
-import { IsString, MinLength, Matches } from 'class-validator';
+import { IsIn, IsString, MinLength, Matches } from 'class-validator';
 
 export class RegisterDto {
   @IsString()
@@ -16,4 +16,8 @@ export class RegisterDto {
   // Temp token nhận được sau khi verify OTP thành công
   @IsString()
   tempToken: string;
+
+  @IsString()
+  @IsIn(['male', 'female'], { message: 'Giới tính không hợp lệ' })
+  gender: string;
 }

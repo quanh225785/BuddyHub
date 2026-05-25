@@ -28,6 +28,7 @@ export class UsersService {
         avatarUrl: true,
         bio: true,
         isVerified: true,
+        gender: true,
         interests: {
           select: {
             interest: {
@@ -58,6 +59,7 @@ export class UsersService {
         interests: user.interests.map((item) => item.interest.name),
         avatarUrl: user.avatarUrl,
         bio: user.bio,
+        gender: user.gender,
         hostedCount,
         joinedCount,
         isVerified: user.isVerified,
@@ -140,6 +142,7 @@ export class UsersService {
         avatarUrl: true,
         bio: true,
         isVerified: true,
+        gender: true,
         interests: {
           select: {
             interest: {
@@ -246,6 +249,7 @@ export class UsersService {
         avatarUrl: user.avatarUrl,
         bio: user.bio,
         interests: user.interests.map((item) => item.interest.name),
+        gender: user.gender,
         hostedCount,
         joinedCount,
         isVerified: user.isVerified,

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Banner, FieldErrors, RegisterForm } from './types'
+import type { Banner, FieldErrors, RegisterForm } from '../../types/auth'
 import { MailIcon, EyeIcon, EyeOffIcon } from './icons'
 
 type RegisterScreenProps = {
@@ -61,6 +61,7 @@ export function RegisterScreen({
             placeholder="ten.ho225726@sis.hust.edu.vn"
             aria-invalid={Boolean(errors.email)}
           />
+          <small className="field-hint">Chỉ chấp nhận email có đuôi @sis.hust.edu.vn</small>
           {errors.email && <small className="field-error">{errors.email}</small>}
         </label>
 
@@ -110,17 +111,37 @@ export function RegisterScreen({
           {errors.confirmPassword && <small className="field-error">{errors.confirmPassword}</small>}
         </label>
 
-        <div className="helper-text">
-          Chỉ chấp nhận email có đuôi <strong>@sis.hust.edu.vn</strong>
-        </div>
+        <label className="field">
+          <span>Giới tính</span>
+          <div className="choice-row choice-row-gender">
+            <button
+              type="button"
+              className={`choice-pill choice-pill-gender ${form.gender === 'male' ? 'is-selected' : ''}`}
+              onClick={() => onChange('gender', 'male')}
+            >
+              Nam
+            </button>
+            <button
+              type="button"
+              className={`choice-pill choice-pill-gender ${form.gender === 'female' ? 'is-selected' : ''}`}
+              onClick={() => onChange('gender', 'female')}
+            >
+              Nữ
+            </button>
+          </div>
+          {errors.gender && <small className="field-error">{errors.gender}</small>}
+        </label>
 
         <button className="primary-button" type="submit" disabled={loading}>
           {loading ? 'Đang gửi mã...' : 'Gửi mã xác thực'}
         </button>
 
-        <button className="text-button" type="button" onClick={onGoLogin}>
-          Đã có tài khoản? Đăng nhập
-        </button>
+        <p className="auth-switch">
+          <span>Bạn đã có tài khoản? </span>
+          <button className="text-link-button" type="button" onClick={onGoLogin}>
+            Đăng nhập
+          </button>
+        </p>
       </form>
     </>
   )

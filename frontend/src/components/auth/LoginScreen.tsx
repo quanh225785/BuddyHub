@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Banner, FieldErrors, LoginForm } from './types'
+import type { Banner, FieldErrors, LoginForm } from '../../types/auth'
 import { EyeIcon, EyeOffIcon, MailIcon } from './icons'
 
 type LoginScreenProps = {

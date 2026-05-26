@@ -33,6 +33,181 @@
   max-width: 62ch;
 }
 
+.activity-browse-filters {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at top right, rgba(255, 208, 152, 0.22), transparent 32%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(255, 251, 246, 0.94));
+  border: 1px solid rgba(239, 224, 208, 0.9);
+  box-shadow:
+    0 22px 44px rgba(136, 96, 55, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.activity-browse-field-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.activity-browse-filters-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+.activity-browse-search,
+.activity-browse-select {
+  display: grid;
+  gap: 6px;
+}
+
+.activity-browse-field-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #7f7786;
+}
+
+.activity-browse-search-input,
+.activity-browse-select-shell {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 42px;
+  border-radius: 15px;
+  border: 1px solid #eadccf;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+
+.activity-browse-search-input {
+  min-height: 48px;
+  padding: 0 6px 0 10px;
+  background: linear-gradient(180deg, #fff, #fff9f3);
+}
+
+.activity-browse-field-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  color: #d9722f;
+}
+
+.activity-browse-search input,
+.activity-browse-select select {
+  width: 100%;
+  min-height: 100%;
+  border: 0;
+  background: transparent;
+  color: #2f3138;
+  font: inherit;
+  outline: none;
+}
+
+.activity-browse-search input {
+  padding: 0 12px 0 8px;
+  font-size: 0.95rem;
+}
+
+.activity-browse-select-shell {
+  padding: 0 12px;
+}
+
+.activity-browse-select select {
+  appearance: none;
+  padding-right: 24px;
+  font-size: 0.95rem;
+  outline: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #c47c4e 50%),
+    linear-gradient(135deg, #c47c4e 50%, transparent 50%);
+  background-position:
+    calc(100% - 14px) calc(50% - 3px),
+    calc(100% - 8px) calc(50% - 3px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
+.activity-browse-search:focus-within .activity-browse-search-input,
+.activity-browse-select:focus-within .activity-browse-select-shell {
+  border-color: #ed742d;
+  box-shadow:
+    0 0 0 4px rgba(237, 116, 45, 0.14),
+    0 12px 24px rgba(231, 133, 74, 0.12);
+  background: #fff;
+  transform: translateY(-1px);
+}
+
+.activity-browse-filter-group {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.activity-browse-clear {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid #e5c6ac;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #fff8f0, #ffefd9);
+  color: #9f5828;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.activity-browse-clear:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: #d79b6d;
+  box-shadow: 0 10px 18px rgba(215, 139, 82, 0.16);
+}
+
+.activity-browse-clear:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.activity-browse-clear-inline {
+  min-width: fit-content;
+}
+
+.activity-browse-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.activity-browse-count,
+.activity-browse-hint {
+  margin: 0;
+  color: #7f7786;
+}
+
+.activity-browse-count {
+  font-weight: 700;
+  color: #5d6271;
+}
+
+.activity-browse-hint {
+  font-size: 0.9rem;
+}
+
 .activity-browse-status,
 .activity-browse-empty {
   padding: 48px 20px;
@@ -186,6 +361,14 @@
 }
 
 @media (max-width: 1024px) {
+  .activity-browse-filters {
+    padding: 14px;
+  }
+
+  .activity-browse-filters-body {
+    grid-template-columns: 1fr;
+  }
+
   .activity-browse-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -194,6 +377,15 @@
 @media (max-width: 640px) {
   .activity-browse-page {
     padding: 14px 12px 32px;
+  }
+
+  .activity-browse-filters {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .activity-browse-filter-group {
+    grid-template-columns: 1fr;
   }
 
   .activity-browse-grid {

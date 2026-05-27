@@ -105,11 +105,16 @@ export default function ActivityDetailPage({ activityId }: ActivityDetailPagePro
     navigate(source === 'my-events' ? '/my-events' : '/activities')
   }
 
+  const handleOpenUserProfile = (userId?: string | null) => {
+    if (!userId) return
+    navigate(userId === getCurrentUserId() ? '/me' : `/users/${userId}`)
+  }
+
   const categoryStyle = activity ? getCategoryStyle(activity.categoryName) : null
   const hostDisplayName = activity ? (activity.host?.name ?? 'BuddyHub member') : ''
   const currentUserId = getCurrentUserId()
-  const isHost = currentUserId !== null && activity?.host?.id === currentUserId
   const spotsLeft = activity ? activity.maxSlots - activity.currentParticipants : 0
+  const isHost = currentUserId !== null && activity?.host?.id === currentUserId
   const fillPercent =
     activity && activity.maxSlots > 0
       ? Math.min(100, Math.round((activity.currentParticipants / activity.maxSlots) * 100))
@@ -257,10 +262,19 @@ export default function ActivityDetailPage({ activityId }: ActivityDetailPagePro
                     <ul className="adp-participants-list">
                       {activity.participants.map((p) => (
                         <li key={p.id} className="adp-participant-card">
-                          <span className="adp-participant-avatar">
-                            {participantInitial(p.name)}
-                          </span>
-                          <span className="adp-participant-name">{p.name}</span>
+                          <button
+                            type="button"
+                            className="adp-participant-profile-button"
+                            onClick={() => handleOpenUserProfile(p.id)}
+                          >
+                            <span className="adp-participant-avatar">
+                              {participantInitial(p.name)}
+                            </span>
+                            <span className="adp-participant-text">
+                              <span className="adp-participant-name">{p.name}</span>
+                              <span className="adp-participant-hint">Xem hồ sơ</span>
+                            </span>
+                          </button>
                         </li>
                       ))}
                     </ul>
@@ -361,7 +375,11 @@ export default function ActivityDetailPage({ activityId }: ActivityDetailPagePro
 
               <div className="activity-detail-sidebar-card">
                 <h2 className="activity-detail-sidebar-label">Người tổ chức</h2>
-                <div className="activity-detail-host-row">
+                <button
+                  type="button"
+                  className="activity-detail-host-row activity-detail-host-button"
+                  onClick={() => handleOpenUserProfile(activity.host?.id)}
+                >
                   {activity.host?.avatarUrl ? (
                     <img
                       src={activity.host.avatarUrl}
@@ -376,8 +394,11 @@ export default function ActivityDetailPage({ activityId }: ActivityDetailPagePro
                       {hostDisplayName.trim().charAt(0).toUpperCase()}
                     </span>
                   )}
-                  <span className="activity-detail-host-name">{hostDisplayName}</span>
-                </div>
+                  <span className="activity-detail-host-text">
+                    <span className="activity-detail-host-name">{hostDisplayName}</span>
+                    <span className="activity-detail-host-hint">Xem hồ sơ</span>
+                  </span>
+                </button>
               </div>
             </aside>
           </div>

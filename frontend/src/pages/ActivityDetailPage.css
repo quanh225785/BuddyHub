@@ -221,13 +221,33 @@
 }
 
 .adp-participant-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
   background: #fff8f1;
   border-radius: 14px;
   border: 1px solid #efe0d0;
+  overflow: hidden;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
+}
+
+.adp-participant-card:hover {
+  border-color: rgba(237, 116, 45, 0.38);
+  box-shadow: 0 10px 22px rgba(136, 96, 55, 0.08);
+  transform: translateY(-1px);
+}
+
+.adp-participant-profile-button {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 12px 16px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .adp-participant-avatar {
@@ -248,6 +268,18 @@
   font-weight: 700;
   font-size: 0.94rem;
   color: #2f3138;
+}
+
+.adp-participant-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.adp-participant-hint {
+  color: #9aa3b2;
+  font-size: 0.8rem;
+  font-weight: 700;
 }
 
 .activity-detail-muted {
@@ -325,6 +357,27 @@
   gap: 10px;
 }
 
+.activity-detail-host-button {
+  width: 100%;
+  border: none;
+  border-radius: 14px;
+  background: #fff8f1;
+  padding: 10px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
+}
+
+.activity-detail-host-button:hover {
+  background: #fff3e8;
+  box-shadow: 0 10px 20px rgba(136, 96, 55, 0.08);
+  transform: translateY(-1px);
+}
+
 .activity-detail-host-avatar {
   width: 40px;
   height: 40px;
@@ -345,6 +398,18 @@
   font-weight: 700;
   font-size: 0.96rem;
   color: #2f3138;
+}
+
+.activity-detail-host-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.activity-detail-host-hint {
+  color: #9aa3b2;
+  font-size: 0.8rem;
+  font-weight: 700;
 }
 
 /* Join button */

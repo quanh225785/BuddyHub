@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PrismaModule } from '../prisma/prisma.module';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -17,6 +18,6 @@ if (!jwtSecret) throw new Error('JWT_SECRET khong duoc de trong');
     }),
   ],
   controllers: [UsersController],
-  providers: [UsersService, JwtAuthGuard],
+  providers: [UsersService, JwtAuthGuard, CloudinaryService],
 })
 export class UsersModule {}

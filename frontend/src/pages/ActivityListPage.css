@@ -1,7 +1,7 @@
 .activity-browse-page {
   position: relative;
   min-height: 100svh;
-  padding: 0 var(--app-page-x) 56px;
+  padding: 88px 0 56px;
   overflow: hidden;
   font-family: var(--sans);
   color: #2f3138;
@@ -11,8 +11,9 @@
 .activity-browse-shell {
   position: relative;
   z-index: 1;
-  max-width: var(--app-shell-max);
+  width: min(100%, calc(var(--app-shell-max) - 120px));
   margin: 0 auto;
+  padding: 0 var(--app-page-x) 0;
   display: grid;
   gap: 22px;
 }
@@ -456,7 +457,7 @@
 
 @media (min-width: 1280px) {
   .activity-browse-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 

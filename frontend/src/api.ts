@@ -31,9 +31,15 @@ export type ProfilePayload = {
   name: string;
   faculty?: string | null;
   schoolYear?: number | null;
+  avatarUrl?: string | null;
   bio?: string | null;
   interests?: string[];
 };
+
+export type ChangePasswordPayload = {
+  currentPassword: string
+  newPassword: string
+}
 
 type AuthHeaderOptions = {
   token?: string;
@@ -92,6 +98,24 @@ export async function updateProfile(
     withAuthHeader(options),
   );
   return response.data;
+}
+
+export async function changePassword(
+  payload: ChangePasswordPayload,
+  options?: AuthHeaderOptions,
+) {
+  const response = await api.patch('/users/me/password', payload, withAuthHeader(options))
+  return response.data as { message: string }
+}
+
+export async function uploadUserAvatar(file: File, options?: AuthHeaderOptions) {
+  const formData = new FormData();
+  formData.append('avatar', file);
+
+  const response = await api.post('/users/me/avatar', formData, {
+    ...withAuthHeader(options),
+  });
+  return response.data as { message: string; secureUrl: string; publicId: string };
 }
 
 export async function getDashboard() {

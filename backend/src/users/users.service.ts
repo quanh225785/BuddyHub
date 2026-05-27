@@ -2,6 +2,8 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { ActivityStatus, ParticipantStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { ChangePasswordDto } from './dto/update-profile.dto';
+import * as bcrypt from 'bcrypt';
 
 type UserDashboardActivity = {
   id: string;
@@ -23,6 +25,7 @@ export class UsersService {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
+        studentId: true,
         name: true,
         faculty: true,
         schoolYear: true,
@@ -54,6 +57,7 @@ export class UsersService {
     return {
       message: 'OK',
       profile: {
+        studentId: user.studentId,
         name: user.name,
         faculty: user.faculty,
         schoolYear: user.schoolYear,
@@ -128,6 +132,40 @@ export class UsersService {
     }
 
     return this.getPublicProfile(userId);
+  }
+
+  async changeMyPassword(userId: string, dto: ChangePasswordDto) {
+    const currentPassword = dto.currentPassword?.trim()
+    const newPassword = dto.newPassword?.trim()
+
+    if (!currentPassword || !newPassword) {
+      throw new BadRequestException('error')
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, passwordHash: true },
+    })
+
+    if (!user) {
+      throw new BadRequestException('error')
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.passwordHash)
+    if (!isMatch) {
+      throw new BadRequestException('Mật khẩu hiện tại không chính xác')
+    }
+
+    if (newPassword.length < 8) {
+      throw new BadRequestException('Mật khẩu mới phải có ít nhất 8 ký tự')
+    }
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash: await bcrypt.hash(newPassword, 10) },
+    })
+
+    return { message: 'OK' }
   }
 
   async getMyDashboard(userId: string) {

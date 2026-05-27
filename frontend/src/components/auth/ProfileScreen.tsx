@@ -13,6 +13,7 @@ type ProfileScreenProps = {
   interestOptions: string[]
   interestLoading: boolean
   onChange: (field: keyof CompleteProfileForm, value: string) => void
+  onAvatarChange: (file: File | null, previewUrl: string) => void
   onToggleInterest: (interest: string) => void
   onSubmit: (event: React.FormEvent<HTMLFormElement>) => void
 }
@@ -26,6 +27,7 @@ export function ProfileScreen({
   interestOptions,
   interestLoading,
   onChange,
+  onAvatarChange,
   onToggleInterest,
   onSubmit,
 }: ProfileScreenProps) {
@@ -184,11 +186,10 @@ export function ProfileScreen({
                   onChange={(e) => {
                     const file = e.target.files?.[0] ?? null
                     if (!file) {
-                      onChange('avatarUrl', '')
                       return
                     }
                     const reader = new FileReader()
-                    reader.onload = () => onChange('avatarUrl', reader.result as string)
+                    reader.onload = () => onAvatarChange(file, reader.result as string)
                     reader.readAsDataURL(file)
                   }}
                 />

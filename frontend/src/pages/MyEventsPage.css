@@ -1,7 +1,7 @@
 .my-events-page {
   position: relative;
   min-height: 100svh;
-  padding: 0 var(--app-page-x) 56px;
+  padding: 88px 0 56px;
   overflow: hidden;
   font-family: var(--sans);
 }
@@ -9,8 +9,9 @@
 .my-events-shell {
   position: relative;
   z-index: 1;
-  max-width: var(--app-shell-max);
+  width: min(100%, calc(var(--app-shell-max) - 120px));
   margin: 0 auto;
+  padding: 0 var(--app-page-x) 0;
   display: grid;
   gap: 22px;
 }
@@ -18,7 +19,7 @@
 .my-events-intro h1 {
   margin: 0;
   font-family: var(--heading);
-  font-size: clamp(1.6rem, 3vw, 2rem);
+  font-size: clamp(1.7rem, 3vw, 2.2rem);
   font-weight: 800;
   color: #2d2a33;
 }

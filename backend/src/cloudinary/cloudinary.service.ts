@@ -10,12 +10,14 @@ import { Readable } from 'stream';
 export const ACTIVITY_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 
 const ACTIVITY_IMAGE_FOLDER = 'buddyhub/activities';
+const AVATAR_IMAGE_FOLDER = 'buddyhub/avatars';
 const ALLOWED_IMAGE_MIME_TYPES = new Set([
   'image/jpeg',
   'image/png',
   'image/webp',
   'image/gif',
 ]);
+export const AVATAR_IMAGE_MAX_BYTES = 2 * 1024 * 1024;
 
 export type UploadableImageFile = {
   buffer?: Buffer;
@@ -35,6 +37,7 @@ export class CloudinaryService {
   private readonly apiKey?: string;
   private readonly apiSecret?: string;
   private readonly activityFolder: string;
+  private readonly avatarFolder: string;
 
   constructor(private readonly configService: ConfigService) {
     this.cloudName = this.readConfig('CLOUDINARY_CLOUD_NAME');
@@ -42,6 +45,8 @@ export class CloudinaryService {
     this.apiSecret = this.readConfig('CLOUDINARY_API_SECRET');
     this.activityFolder =
       this.readConfig('CLOUDINARY_ACTIVITY_FOLDER') ?? ACTIVITY_IMAGE_FOLDER;
+    this.avatarFolder =
+      this.readConfig('CLOUDINARY_AVATAR_FOLDER') ?? AVATAR_IMAGE_FOLDER;
 
     if (this.hasCredentials()) {
       cloudinary.config({
@@ -56,38 +61,22 @@ export class CloudinaryService {
     file: UploadableImageFile,
   ): Promise<UploadedCloudinaryImage> {
     this.validateActivityImage(file);
-    this.ensureConfigured();
+    return this.uploadImage(
+      file,
+      this.activityFolder,
+      'Không thể upload ảnh hoạt động',
+    );
+  }
 
-    const result = await new Promise<UploadApiResponse>((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          folder: this.activityFolder,
-          resource_type: 'image',
-          use_filename: true,
-          unique_filename: true,
-          transformation: [{ quality: 'auto', fetch_format: 'auto' }],
-        },
-        (error, uploadResult) => {
-          if (error || !uploadResult) {
-            reject(
-              new InternalServerErrorException(
-                'Không thể upload ảnh hoạt động',
-              ),
-            );
-            return;
-          }
-
-          resolve(uploadResult);
-        },
-      );
-
-      Readable.from(file.buffer as Buffer).pipe(uploadStream);
-    });
-
-    return {
-      secureUrl: result.secure_url,
-      publicId: result.public_id,
-    };
+  async uploadUserAvatar(
+    file: UploadableImageFile,
+  ): Promise<UploadedCloudinaryImage> {
+    this.validateAvatarImage(file);
+    return this.uploadImage(
+      file,
+      this.avatarFolder,
+      'Không thể upload ảnh đại diện',
+    );
   }
 
   async deleteImage(publicId: string) {
@@ -107,6 +96,55 @@ export class CloudinaryService {
     if (!file.size || file.size > ACTIVITY_IMAGE_MAX_BYTES) {
       throw new BadRequestException('Ảnh hoạt động tối đa 5MB');
     }
+  }
+
+  private validateAvatarImage(file: UploadableImageFile) {
+    if (!file.buffer || file.buffer.length === 0) {
+      throw new BadRequestException('Vui lòng chọn ảnh đại diện');
+    }
+
+    if (!file.mimetype || !ALLOWED_IMAGE_MIME_TYPES.has(file.mimetype)) {
+      throw new BadRequestException('Ảnh chỉ hỗ trợ JPG, PNG, WEBP hoặc GIF');
+    }
+
+    if (!file.size || file.size > AVATAR_IMAGE_MAX_BYTES) {
+      throw new BadRequestException('Ảnh đại diện tối đa 2MB');
+    }
+  }
+
+  private async uploadImage(
+    file: UploadableImageFile,
+    folder: string,
+    errorMessage: string,
+  ): Promise<UploadedCloudinaryImage> {
+    this.ensureConfigured();
+
+    const result = await new Promise<UploadApiResponse>((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder,
+          resource_type: 'image',
+          use_filename: true,
+          unique_filename: true,
+          transformation: [{ quality: 'auto', fetch_format: 'auto' }],
+        },
+        (error, uploadResult) => {
+          if (error || !uploadResult) {
+            reject(new InternalServerErrorException(errorMessage));
+            return;
+          }
+
+          resolve(uploadResult);
+        },
+      );
+
+      Readable.from(file.buffer as Buffer).pipe(uploadStream);
+    });
+
+    return {
+      secureUrl: result.secure_url,
+      publicId: result.public_id,
+    };
   }
 
   private ensureConfigured() {

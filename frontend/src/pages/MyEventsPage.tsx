@@ -65,9 +65,9 @@ export default function MyEventsPage() {
       <div className="auth-orb auth-orb-one" aria-hidden />
       <div className="auth-orb auth-orb-two" aria-hidden />
 
-      <div className="my-events-shell">
-        <AppNav active="my-events" />
+      <AppNav active="my-events" />
 
+      <div className="my-events-shell">
         <div className="my-events-intro">
           <h1>Hoạt động của tôi</h1>
           <p>Các hoạt động bạn đã tạo hoặc đã tham gia trên BuddyHub.</p>

@@ -3,6 +3,7 @@ import { getDashboard } from "./api";
 import AuthPage from "./pages/AuthPage";
 import ActivityDetailPage from "./pages/ActivityDetailPage";
 import ActivityListPage from "./pages/ActivityListPage";
+import ChangePasswordPage from "./pages/ChangePasswordPage.tsx";
 import CreateActivityPage from "./pages/CreateActivityPage";
 import MyEventsPage from "./pages/MyEventsPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -29,6 +30,7 @@ function getActivityDetailId(pathname: string) {
 function isProtectedPath(pathname: string) {
   return (
     pathname === "/me" ||
+    pathname === "/me/password" ||
     pathname === "/my-events" ||
     pathname === "/activities" ||
     pathname.startsWith("/activities/") ||
@@ -122,6 +124,10 @@ function App() {
 
   if (pathname === "/me") {
     return <ProfilePage />;
+  }
+
+  if (pathname === "/me/password") {
+    return <ChangePasswordPage />;
   }
 
   if (pathname === "/my-events") {

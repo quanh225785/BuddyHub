@@ -148,9 +148,9 @@ export default function CreateActivityPage() {
       <div className="auth-orb auth-orb-one" aria-hidden />
       <div className="auth-orb auth-orb-two" aria-hidden />
 
-      <div className="create-activity-frame">
-        <AppNav />
+      <AppNav />
 
+      <div className="create-activity-frame">
         <div className="create-hero-card">
           <div className="create-hero-icon" aria-hidden>
             ＋

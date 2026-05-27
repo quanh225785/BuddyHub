@@ -23,6 +23,7 @@ export type CompleteProfileForm = {
   interests: string[]
   bio: string
   avatarUrl?: string | null
+  avatarFile?: File | null
 }
 
 export type ProfileForm = {

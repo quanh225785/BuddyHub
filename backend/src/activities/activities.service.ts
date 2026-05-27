@@ -126,6 +126,7 @@ export class ActivitiesService {
                 select: {
                   id: true,
                   name: true,
+                  avatarUrl: true,
                 },
               },
             },
@@ -140,6 +141,7 @@ export class ActivitiesService {
       const participants = activity.participants.map((item) => ({
         id: item.user.id,
         name: item.user.name,
+        avatarUrl: item.user.avatarUrl,
       }));
 
       return {

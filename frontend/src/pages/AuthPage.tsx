@@ -4,6 +4,7 @@ import {
   login,
   registerUser,
   sendOtp,
+  uploadUserAvatar,
   updateProfile,
   verifyOtp,
   type ProfilePayload,
@@ -41,6 +42,8 @@ const completeProfileDefaults: CompleteProfileForm = {
   schoolYear: '',
   interests: [],
   bio: '',
+  avatarUrl: '',
+  avatarFile: null,
 }
 
 function normalizeEmail(email: string) {
@@ -275,6 +278,15 @@ export default function AuthPage() {
   const updateCompleteProfileField = (field: keyof CompleteProfileForm, value: string) => {
     setCompleteProfileForm((current) => ({ ...current, [field]: value }))
     setCompleteProfileErrors((current) => ({ ...current, [field]: undefined }))
+    setBanner(null)
+  }
+
+  const updateCompleteProfileAvatar = (file: File | null, previewUrl: string) => {
+    setCompleteProfileForm((current) => ({
+      ...current,
+      avatarFile: file,
+      avatarUrl: previewUrl,
+    }))
     setBanner(null)
   }
 
@@ -611,11 +623,18 @@ export default function AuthPage() {
         throw new Error('Không nhận được accessToken từ máy chủ')
       }
 
+      let avatarUrl = completeProfileForm.avatarUrl?.trim() || null
+      if (completeProfileForm.avatarFile) {
+        const avatarResult = await uploadUserAvatar(completeProfileForm.avatarFile, { token: accessToken })
+        avatarUrl = avatarResult?.secureUrl?.trim() || avatarUrl
+      }
+
       // Step 2: Update profile with additional information
       const payload: ProfilePayload = {
         name: completeProfileForm.name.trim(),
         faculty: completeProfileForm.faculty.trim() || null,
         schoolYear: Number(completeProfileForm.schoolYear) || null,
+        avatarUrl,
         bio: completeProfileForm.bio.trim() || null,
       }
 
@@ -736,6 +755,7 @@ export default function AuthPage() {
                 interestOptions={interestOptions}
                 interestLoading={interestLoading}
                 onChange={updateCompleteProfileField}
+                onAvatarChange={updateCompleteProfileAvatar}
                 onToggleInterest={toggleInterest}
                 onSubmit={handleProfileSubmit}
               />

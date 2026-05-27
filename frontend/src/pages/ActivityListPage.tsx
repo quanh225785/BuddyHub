@@ -144,9 +144,9 @@ export default function ActivityListPage() {
       <div className="auth-orb auth-orb-one" aria-hidden />
       <div className="auth-orb auth-orb-two" aria-hidden />
 
-      <div className="activity-browse-shell">
-        <AppNav active="activities" />
+      <AppNav active="activities" />
 
+      <div className="activity-browse-shell">
         <div className="activity-browse-intro">
           <div>
             <h1>Hoạt động có thể tham gia</h1>

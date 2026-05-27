@@ -1,7 +1,7 @@
 .create-activity-page {
   position: relative;
   min-height: 100svh;
-  padding: 0 var(--app-page-x) 56px;
+  padding: 88px 0 56px;
   overflow: hidden;
   font-family: var(--sans);
   color: #2f3138;
@@ -19,9 +19,9 @@
 .create-activity-frame {
   position: relative;
   z-index: 1;
-  width: 100%;
-  max-width: var(--app-shell-max);
+  width: min(100%, calc(var(--app-shell-max) - 120px));
   margin: 0 auto;
+  padding: 0 var(--app-page-x) 0;
   display: grid;
   gap: 20px;
 }

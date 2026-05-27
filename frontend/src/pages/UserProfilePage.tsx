@@ -8,6 +8,7 @@ import "./ProfilePage.css";
 type PublicProfileResponse = {
   message: string;
   profile: {
+    studentId?: string;
     name: string;
     faculty?: string | null;
     schoolYear?: number | null;
@@ -25,15 +26,6 @@ function formatGender(value?: "MALE" | "FEMALE" | "ALL" | null) {
   if (value === "MALE") return "Nam";
   if (value === "FEMALE") return "Nữ";
   return "Chưa cập nhật";
-}
-
-function makeHandle(name: string) {
-  return name
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, ".")
-    .replace(/(^\.|\.$)/g, "");
 }
 
 export default function UserProfilePage({ userId }: { userId: string }) {
@@ -102,17 +94,18 @@ export default function UserProfilePage({ userId }: { userId: string }) {
   const profile = data.profile;
   const initial = profile.name.trim().charAt(0).toUpperCase() || "?";
   const genderLabel = formatGender(profile.gender);
-  const handle = makeHandle(profile.name);
+  const studentId = profile.studentId?.trim();
 
   return (
     <main className="myprofile-shell public-profile-shell">
       <AppNav />
 
-      <button type="button" className="profile-back" onClick={() => window.history.back()}>
-        ← Quay lại
-      </button>
+      <div className="myprofile-content public-profile-content">
+        <button type="button" className="profile-back" onClick={() => window.history.back()}>
+          ← Quay lại
+        </button>
 
-      <section className="myprofile-card public-profile-card">
+        <section className="myprofile-card public-profile-card">
         <div className="public-profile-cover" />
 
         <div className="public-profile-header">
@@ -128,7 +121,7 @@ export default function UserProfilePage({ userId }: { userId: string }) {
           <div className="public-profile-meta">
             <div className="public-profile-name-row">
               <h1>{profile.name}</h1>
-              {handle && <span className="handle">@{handle}</span>}
+              {studentId && <span className="handle">@{studentId.toLowerCase()}</span>}
             </div>
 
             <div className="public-profile-sub">
@@ -202,7 +195,8 @@ export default function UserProfilePage({ userId }: { userId: string }) {
             Khám phá hoạt động
           </button>
         </div>
-      </section>
+        </section>
+      </div>
     </main>
   );
 }

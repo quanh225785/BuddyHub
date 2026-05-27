@@ -19,3 +19,11 @@ export class UpdateProfileDto {
   @IsOptional()
   bio?: string | null;
 }
+
+export class ChangePasswordDto {
+  @IsOptional()
+  currentPassword?: string;
+
+  @IsOptional()
+  newPassword?: string;
+}

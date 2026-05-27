@@ -85,6 +85,17 @@ export function AppNav({ active }: AppNavProps) {
                     className="app-nav-account-item"
                     onClick={() => {
                       setAccountOpen(false)
+                      navigate('/me/password')
+                    }}
+                  >
+                    Đổi mật khẩu
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="app-nav-account-item"
+                    onClick={() => {
+                      setAccountOpen(false)
                       navigate('/me')
                     }}
                   >

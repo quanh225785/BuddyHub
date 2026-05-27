@@ -52,6 +52,7 @@ export type ActivityListItem = {
 export type ActivityParticipant = {
   id: string
   name: string
+  avatarUrl?: string | null
 }
 
 export type ActivityStatus = 'OPEN' | 'FULL' | 'CLOSED' | 'CANCELLED' | 'FINISHED'

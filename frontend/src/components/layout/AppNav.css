@@ -1,7 +1,9 @@
 .app-nav {
   --nav-font-size: 0.9rem;
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 30;
   display: grid;
   grid-template-columns: minmax(150px, 1fr) auto minmax(150px, 1fr);
@@ -15,7 +17,7 @@
   background: #fff;
   border: 0;
   border-bottom: 1px solid #eadfd2;
-  box-shadow: none;
+  box-shadow: 0 8px 24px rgba(49, 31, 18, 0.05);
   font-family: var(--sans);
 }
 

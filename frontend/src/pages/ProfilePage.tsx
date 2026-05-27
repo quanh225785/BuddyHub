@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getDashboard, updateProfile, type ProfilePayload } from '../api'
+import { getDashboard, updateProfile, uploadUserAvatar, type ProfilePayload } from '../api'
 import { ButtonSpinner, LoadingState } from '../components/common/LoadingState'
-import { fetchInterests, getDashboard, updateProfile, type ProfilePayload } from '../api'
+import { fetchInterests} from '../api'
 import { AppNav } from '../components/layout/AppNav'
 import { clearAccessToken, loginPath, setAuthRedirectMessage } from '../lib/auth'
 import { formatActivityTime } from '../lib/formatActivity'
@@ -9,10 +9,37 @@ import { navigate } from '../lib/navigation'
 import type { DashboardResponse } from '../types/dashboard'
 import './ProfilePage.css'
 
+const facultyOptions = [
+  'Khoa giáo dục Quốc Phòng & An Ninh',
+  'Khoa giáo dục thể chất',
+  'Khoa lý luận chính trị',
+  'Trường Cơ Khí',
+  'Trường CNTT & TT',
+  'Trường Điện - Điện tử',
+  'Trường Hóa và Khoa học sự sống',
+  'Trường Vật Liệu',
+  'Khoa Toán - Tin',
+  'Khoa Vật Lý Kỹ Thuật',
+  'Trường Kinh Tế',
+  'Khoa Ngoại Ngữ',
+  'Khoa khoa học và công nghệ giáo dục',
+]
+
+const schoolYearOptions = [
+  { value: '1', label: 'Năm 1' },
+  { value: '2', label: 'Năm 2' },
+  { value: '3', label: 'Năm 3' },
+  { value: '4', label: 'Năm 4' },
+  { value: '5', label: 'Năm 5' },
+  { value: '6', label: 'Cao học' },
+]
+
 type ProfileDraft = {
   name: string
   faculty: string
   schoolYear: string
+  avatarUrl: string
+  avatarFile: File | null
   bio: string
   interests: string[]
 }
@@ -58,6 +85,8 @@ export default function ProfilePage() {
           name: data.profile.name,
           faculty: data.profile.faculty ?? '',
           schoolYear: data.profile.schoolYear ? String(data.profile.schoolYear) : '',
+          avatarUrl: data.profile.avatarUrl ?? '',
+          avatarFile: null,
           bio: data.profile.bio ?? '',
           interests: [...data.profile.interests],
         })
@@ -110,9 +139,11 @@ export default function ProfilePage() {
   const visibleActivities = activeTab === 'upcoming' ? upcomingActivities : historyActivities
 
   const handleInitial = useMemo(() => {
-    const firstChar = profile?.name?.trim()?.charAt(0)
+    const firstChar = (editing ? draft?.name : profile?.name)?.trim()?.charAt(0)
     return firstChar ? firstChar.toUpperCase() : '?'
-  }, [profile?.name])
+  }, [draft?.name, editing, profile?.name])
+
+  const displayedAvatarUrl = editing ? draft?.avatarUrl : profile?.avatarUrl
 
   const toggleInterest = (interest: string) => {
     setDraft((current) => {
@@ -133,6 +164,8 @@ export default function ProfilePage() {
       name: profile.name,
       faculty: profile.faculty ?? '',
       schoolYear: profile.schoolYear ? String(profile.schoolYear) : '',
+      avatarUrl: profile.avatarUrl ?? '',
+      avatarFile: null,
       bio: profile.bio ?? '',
       interests: [...profile.interests],
     })
@@ -146,6 +179,8 @@ export default function ProfilePage() {
         name: profile.name,
         faculty: profile.faculty ?? '',
         schoolYear: profile.schoolYear ? String(profile.schoolYear) : '',
+        avatarUrl: profile.avatarUrl ?? '',
+        avatarFile: null,
         bio: profile.bio ?? '',
         interests: [...profile.interests],
       })
@@ -163,8 +198,14 @@ export default function ProfilePage() {
         name: draft.name.trim(),
         faculty: draft.faculty.trim() || null,
         schoolYear: draft.schoolYear.trim() ? Number(draft.schoolYear) : null,
+        avatarUrl: draft.avatarUrl.trim() || null,
         bio: draft.bio.trim() || null,
         interests: draft.interests,
+      }
+
+      if (draft.avatarFile) {
+        const avatarResult = await uploadUserAvatar(draft.avatarFile)
+        payload.avatarUrl = avatarResult?.secureUrl?.trim() || payload.avatarUrl || null
       }
 
       await updateProfile(payload)
@@ -181,30 +222,80 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="myprofile-shell">
-        <LoadingState label="Đang tải hồ sơ..." />
-      </div>
+      <main className="myprofile-shell">
+        <AppNav />
+        <div className="myprofile-content">
+          <LoadingState label="Đang tải hồ sơ..." />
+        </div>
+      </main>
     )
   }
 
   if (error) {
-    return <div className="myprofile-shell">Lỗi: {error}</div>
+    return (
+      <main className="myprofile-shell">
+        <AppNav />
+        <div className="myprofile-content">Lỗi: {error}</div>
+      </main>
+    )
   }
 
   if (!profile || !draft) {
-    return <div className="myprofile-shell">Không có hồ sơ</div>
+    return (
+      <main className="myprofile-shell">
+        <AppNav />
+        <div className="myprofile-content">Không có hồ sơ</div>
+      </main>
+    )
   }
 
   return (
     <main className="myprofile-shell">
       <AppNav />
 
-      <section className="myprofile-card myprofile-hero">
+      <div className="myprofile-content">
+        <section className="myprofile-card myprofile-hero">
         <div className="myprofile-cover" />
         <div className="myprofile-header">
-          <div className="avatar" aria-hidden>
-            {profile.avatarUrl ? <img src={profile.avatarUrl} alt="avatar" /> : <div className="avatar-placeholder">{handleInitial}</div>}
-          </div>
+          {editing ? (
+            <label className="avatar upload-label" title="Nhấn để đổi ảnh">
+              <input
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={(event) => {
+                  const file = event.target.files?.[0] ?? null
+                  if (!file) {
+                    return
+                  }
+                  const reader = new FileReader()
+                  reader.onload = () => {
+                    setDraft((current) =>
+                      current
+                        ? { ...current, avatarFile: file, avatarUrl: String(reader.result ?? '') }
+                        : current,
+                    )
+                  }
+                  reader.readAsDataURL(file)
+                }}
+              />
+              {displayedAvatarUrl ? (
+                <img src={displayedAvatarUrl} alt="avatar" />
+              ) : (
+                <div className="avatar-placeholder">{handleInitial}</div>
+              )}
+              <span className="avatar-edit" aria-hidden>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                  <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" fill="currentColor" />
+                  <path d="M20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor" />
+                </svg>
+              </span>
+            </label>
+          ) : (
+            <div className="avatar" aria-hidden>
+              {displayedAvatarUrl ? <img src={displayedAvatarUrl} alt="avatar" /> : <div className="avatar-placeholder">{handleInitial}</div>}
+            </div>
+          )}
 
           <div className="meta">
             <div className="name-row">
@@ -267,22 +358,42 @@ export default function ProfilePage() {
               <div className="edit-row edit-row-same-line">
                 <label className="edit-field">
                   <span>Họ tên</span>
-                  <input value={draft.name} readOnly disabled />
+                  <input
+                    value={draft.name}
+                    onChange={(event) => setDraft((current) => (current ? { ...current, name: event.target.value } : current))}
+                    placeholder="Họ và tên"
+                  />
                 </label>
 
                 <label className="edit-field">
                   <span>Năm học</span>
-                  <input value={draft.schoolYear} readOnly disabled />
+                  <select
+                    value={draft.schoolYear}
+                    onChange={(event) => setDraft((current) => (current ? { ...current, schoolYear: event.target.value } : current))}
+                  >
+                    <option value="">Chọn năm học</option>
+                    {schoolYearOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
                 </label>
               </div>
 
               <label className="edit-field edit-field-full">
                 <span>Khoa / Viện</span>
-                <input
+                <select
                   value={draft.faculty}
                   onChange={(event) => setDraft((current) => (current ? { ...current, faculty: event.target.value } : current))}
-                  placeholder="Công nghệ thông tin"
-                />
+                >
+                  <option value="">Chọn khoa / viện</option>
+                  {facultyOptions.map((faculty) => (
+                    <option key={faculty} value={faculty}>
+                      {faculty}
+                    </option>
+                  ))}
+                </select>
               </label>
             </div>
 
@@ -398,7 +509,8 @@ export default function ProfilePage() {
             <span>Mời bạn bè cùng tham gia</span>
           </div>
         </button>
-      </section>
+        </section>
+      </div>
     </main>
   )
 }

@@ -17,7 +17,7 @@ export type CompleteProfileForm = {
   name: string
   password: string
   confirmPassword: string
-  gender: 'male' | 'female' | 'other' | ''
+  gender: 'male' | 'female' | ''
   faculty: string
   schoolYear: string
   interests: string[]

@@ -166,7 +166,6 @@ export function ProfileScreen({
               <option value="">Chọn</option>
               <option value="male">Nam</option>
               <option value="female">Nữ</option>
-              <option value="other">Khác</option>
             </select>
             {errors.gender && <small className="field-error">{errors.gender}</small>}
           </label>

@@ -611,11 +611,16 @@ export default function AuthPage() {
 
     try {
       // Step 1: Register the user account with name, password, gender
+      const gender = completeProfileForm.gender
+       if (gender !== 'male' && gender !== 'female') {
+         throw new Error('Giới tính không hợp lệ. Vui lòng chọn nam hoặc nữ.')
+       }
+
       const registerData = await registerUser({
         name: completeProfileForm.name.trim(),
         password: completeProfileForm.password,
         tempToken: pendingRegistration.tempToken,
-        gender: completeProfileForm.gender as 'male' | 'female',
+        gender,
       })
 
       const accessToken = registerData?.accessToken

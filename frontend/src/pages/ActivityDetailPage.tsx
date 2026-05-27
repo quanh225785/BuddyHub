@@ -115,14 +115,24 @@ export default function ActivityDetailPage({ activityId }: ActivityDetailPagePro
                 <div>
                   <dt>Người tổ chức</dt>
                   <dd className="activity-detail-host-row">
-                    {activity.host?.avatarUrl ? (
-                      <img src={activity.host.avatarUrl} alt="" className="activity-detail-host-avatar" />
+                    {activity.host ? (
+                      <button
+                        type="button"
+                        className="activity-detail-host-link"
+                        onClick={() => navigate(`/users/${activity.host!.id}`)}
+                      >
+                        {activity.host.avatarUrl ? (
+                          <img src={activity.host.avatarUrl} alt="" className="activity-detail-host-avatar" />
+                        ) : (
+                          <span className="activity-detail-host-avatar activity-detail-host-avatar-fallback" aria-hidden>
+                            {hostInitial(hostDisplayName)}
+                          </span>
+                        )}
+                        <span>{hostDisplayName}</span>
+                      </button>
                     ) : (
-                      <span className="activity-detail-host-avatar activity-detail-host-avatar-fallback" aria-hidden>
-                        {hostInitial(hostDisplayName)}
-                      </span>
+                      <span className="activity-detail-host-row-fallback">{hostDisplayName}</span>
                     )}
-                    <span>{hostDisplayName}</span>
                   </dd>
                 </div>
               </dl>
@@ -158,7 +168,13 @@ export default function ActivityDetailPage({ activityId }: ActivityDetailPagePro
                 <ul className="activity-detail-participants">
                   {activity.participants.map((participant) => (
                     <li key={participant.id}>
-                      <span className="activity-detail-participant-name">{participant.name}</span>
+                      <button
+                        type="button"
+                        className="activity-detail-participant-link"
+                        onClick={() => navigate(`/users/${participant.id}`)}
+                      >
+                        <span className="activity-detail-participant-name">{participant.name}</span>
+                      </button>
                     </li>
                   ))}
                 </ul>

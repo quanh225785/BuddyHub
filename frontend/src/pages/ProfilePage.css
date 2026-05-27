@@ -12,6 +12,19 @@
   gap: 20px;
 }
 
+.profile-back {
+  justify-self: start;
+  border: 1px solid rgba(225, 214, 202, 0.9);
+  background: rgba(255, 255, 255, 0.88);
+  color: #5f5768;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.profile-back:hover { color: #de5e24 }
+
 .myprofile-card {
   position: relative;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 252, 248, 0.98));

@@ -87,6 +87,10 @@ export async function getDashboard() {
   return response.data
 }
 
+export async function getPublicProfile(userId: string) {
+  const response = await api.get(`/users/${userId}/profile`)
+  return response.data
+}
 export type CreateActivityPayload = {
   type: ActivityCategory
   name: string

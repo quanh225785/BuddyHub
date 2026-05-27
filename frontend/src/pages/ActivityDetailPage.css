@@ -117,6 +117,24 @@
   gap: 10px;
 }
 
+.activity-detail-host-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+.activity-detail-host-link:focus {
+  outline: 2px solid rgba(222,94,36,0.18);
+  border-radius: 8px;
+}
+
 .activity-detail-host-avatar {
   width: 36px;
   height: 36px;
@@ -182,6 +200,23 @@
   font-weight: 700;
   color: #2f3138;
   font-size: 0.94rem;
+}
+
+.activity-detail-participant-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+.activity-detail-participant-link:hover .activity-detail-participant-name {
+  text-decoration: underline;
+  color: #de5e24;
 }
 
 .activity-detail-join-hint {

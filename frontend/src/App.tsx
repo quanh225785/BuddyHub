@@ -5,6 +5,7 @@ import ActivityListPage from './pages/ActivityListPage'
 import CreateActivityPage from './pages/CreateActivityPage'
 import MyEventsPage from './pages/MyEventsPage'
 import ProfilePage from './pages/ProfilePage'
+import UserProfilePage from './pages/UserProfilePage'
 
 function getActivityDetailId(pathname: string) {
   const match = pathname.match(/^\/activities\/([^/]+)$/)
@@ -53,6 +54,11 @@ function App() {
   const activityId = getActivityDetailId(pathname)
   if (activityId) {
     return <ActivityDetailPage activityId={activityId} />
+  }
+
+  const userMatch = pathname.match(/^\/users\/([^/]+)$/)
+  if (userMatch) {
+    return <UserProfilePage userId={userMatch[1]} />
   }
 
   return <AuthPage />

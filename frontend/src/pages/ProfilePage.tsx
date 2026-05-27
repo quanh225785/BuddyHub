@@ -469,7 +469,16 @@ export default function ProfilePage() {
             <div className="empty-state">Chưa có hoạt động nào.</div>
           ) : (
             visibleActivities.map((activity) => (
-              <article key={activity.id} className="activity-item">
+              <article
+                key={activity.id}
+                className="activity-item"
+                onClick={() => navigate(`/activities/${activity.id}`)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/activities/${activity.id}`) }}
+                style={{ cursor: 'pointer' }}
+                tabIndex={0}
+                role="button"
+                aria-label={activity.title}
+              >
                 {activity.imageUrl ? (
                   <img src={activity.imageUrl} alt="" className="activity-thumb" loading="lazy" />
                 ) : (

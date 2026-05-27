@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -19,30 +20,77 @@ const MAX_KEYWORD_LENGTH = 100;
 const EARTH_RADIUS_KM = 6371;
 
 const CATEGORY_ALIASES = new Map<string, string>([
+  // Ăn uống
   ['ăn uống', 'Ăn uống'],
   ['ăn uống / cà phê', 'Ăn uống'],
   ['ăn uống/cà phê', 'Ăn uống'],
   ['lunch', 'Ăn uống'],
   ['food', 'Ăn uống'],
+
+  // Cà phê
+  ['cà phê', 'Cà phê'],
+  ['ca phe', 'Cà phê'],
+  ['coffee', 'Cà phê'],
+
+  // Học nhóm
   ['học nhóm', 'Học nhóm'],
   ['study', 'Học nhóm'],
-  ['board games', 'Board Games'],
-  ['board game', 'Board Games'],
-  ['boardgame', 'Board Games'],
-  ['thể thao', 'Thể thao'],
-  ['thể thao / fitness', 'Thể thao'],
-  ['thể thao/fitness', 'Thể thao'],
-  ['sports', 'Thể thao'],
-  ['sport', 'Thể thao'],
-  ['giao lưu', 'Giao lưu'],
-  ['giao lưu / tụ tập', 'Giao lưu'],
-  ['giao lưu/tụ tập', 'Giao lưu'],
-  ['giao lưu・tự học', 'Giao lưu'],
-  ['giao lưu / tự học', 'Giao lưu'],
-  ['giao lưu/tự học', 'Giao lưu'],
-  ['social', 'Giao lưu'],
-  ['khác', 'Khác'],
-  ['other', 'Khác'],
+  ['study group', 'Học nhóm'],
+
+  // Lập trình
+  ['lập trình', 'Lập trình'],
+  ['programming', 'Lập trình'],
+  ['code', 'Lập trình'],
+  ['coding', 'Lập trình'],
+
+  // Tiếng Anh
+  ['tiếng anh', 'Tiếng Anh'],
+  ['english', 'Tiếng Anh'],
+
+  // Bóng đá
+  ['bóng đá', 'Bóng đá'],
+  ['football', 'Bóng đá'],
+  ['soccer', 'Bóng đá'],
+
+  // Cầu lông
+  ['cầu lông', 'Cầu lông'],
+  ['badminton', 'Cầu lông'],
+
+  // Gym
+  ['gym', 'Gym'],
+  ['fitness', 'Gym'],
+
+  // Chạy bộ
+  ['chạy bộ', 'Chạy bộ'],
+  ['running', 'Chạy bộ'],
+  ['jogging', 'Chạy bộ'],
+
+  // Xem phim
+  ['xem phim', 'Xem phim'],
+  ['movies', 'Xem phim'],
+  ['movie', 'Xem phim'],
+
+  // Karaoke
+  ['karaoke', 'Karaoke'],
+
+  // Âm nhạc
+  ['âm nhạc', 'Âm nhạc'],
+  ['music', 'Âm nhạc'],
+
+  // Cờ vua
+  ['cờ vua', 'Cờ vua'],
+  ['chess', 'Cờ vua'],
+
+  // Board games
+  ['board games', 'Board games'],
+  ['board game', 'Board games'],
+  ['boardgame', 'Board games'],
+  ['boardgames', 'Board games'],
+
+  // Nhiếp ảnh
+  ['nhiếp ảnh', 'Nhiếp ảnh'],
+  ['photography', 'Nhiếp ảnh'],
+  ['photo', 'Nhiếp ảnh'],
 ]);
 
 const ALL_CATEGORY_VALUES = new Set(['all', 'tất cả']);
@@ -388,7 +436,7 @@ export class ActivitiesService {
       }
 
 
-      await this.prisma.activity.create({
+      const activity = await this.prisma.activity.create({
         data: {
           hostId,
           categoryId: category.id,
@@ -417,9 +465,10 @@ export class ActivitiesService {
                 }
               : undefined,
         },
+        select: { id: true },
       });
 
-      return { message: 'OK' };
+      return { message: 'OK', id: activity.id };
     } catch (error) {
       if (uploadedImage) {
         await this.tryDeleteUploadedImage(uploadedImage.publicId);
@@ -427,6 +476,94 @@ export class ActivitiesService {
 
       if (
         error instanceof BadRequestException ||
+        error instanceof InternalServerErrorException
+      ) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('error');
+    }
+  }
+
+  async update(
+    id: string,
+    hostId: string,
+    dto: CreateActivityDto,
+    imageFile?: UploadableImageFile,
+  ) {
+    let uploadedImage: UploadedCloudinaryImage | undefined;
+    try {
+      const existing = await this.prisma.activity.findUnique({
+        where: { id },
+        select: { id: true, hostId: true, imagePublicId: true },
+      });
+
+      if (!existing) {
+        throw new NotFoundException('Không tìm thấy hoạt động');
+      }
+
+      if (existing.hostId !== hostId) {
+        throw new ForbiddenException('Bạn không có quyền chỉnh sửa hoạt động này');
+      }
+
+      const input = await this.validateCreateActivity(dto);
+
+      const category = await this.prisma.activityCategory.findUnique({
+        where: { name: input.categoryName },
+        select: { id: true },
+      });
+
+      if (!category) {
+        throw this.error();
+      }
+
+      if (imageFile) {
+        uploadedImage = await this.cloudinaryService.uploadActivityImage(imageFile);
+        if (existing.imagePublicId) {
+          await this.tryDeleteUploadedImage(existing.imagePublicId);
+        }
+      }
+
+      await this.prisma.activity.update({
+        where: { id },
+        data: {
+          categoryId: category.id,
+          title: input.title,
+          location: input.location,
+          startTime: input.startTime,
+          endTime: input.endTime ?? null,
+          maxSlots: input.maxSlots,
+          purpose: input.purpose,
+          deadline: input.deadline,
+          chatLink: input.chatLink,
+          description: input.description ?? null,
+          gender: input.gender,
+          ...(uploadedImage
+            ? {
+                imageUrl: uploadedImage.secureUrl,
+                imagePublicId: uploadedImage.publicId,
+              }
+            : {}),
+          interests:
+            input.interestIds.length > 0
+              ? {
+                  deleteMany: {},
+                  create: input.interestIds.map((interestId) => ({ interestId })),
+                }
+              : { deleteMany: {} },
+        },
+      });
+
+      return { message: 'OK', id };
+    } catch (error) {
+      if (uploadedImage) {
+        await this.tryDeleteUploadedImage(uploadedImage.publicId);
+      }
+
+      if (
+        error instanceof BadRequestException ||
+        error instanceof ForbiddenException ||
+        error instanceof NotFoundException ||
         error instanceof InternalServerErrorException
       ) {
         throw error;

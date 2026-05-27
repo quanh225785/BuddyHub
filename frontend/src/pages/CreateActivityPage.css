@@ -222,9 +222,6 @@
   align-items: start;
 }
 
-.create-field-grid-2 .field {
-  min-height: 100%;
-}
 
 .create-gender-field {
   grid-column: 1 / -1;

@@ -34,7 +34,7 @@ export function AppNav({ active }: AppNavProps) {
   return (
     <>
       <header className="app-nav">
-        <button type="button" className="app-nav-brand" onClick={() => navigate('/me')}>
+        <button type="button" className="app-nav-brand" onClick={() => navigate('/activities')}>
           <span className="app-nav-mark" aria-hidden>
             BH
           </span>

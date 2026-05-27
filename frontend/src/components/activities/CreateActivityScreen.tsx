@@ -5,11 +5,20 @@ import type { Banner, CreateActivityForm, FieldErrors } from '../../types/activi
 
 const CATEGORY_ICONS: Record<string, string> = {
   'Ăn uống': '🍜',
+  'Cà phê': '☕',
   'Học nhóm': '📚',
-  'Board Games': '🎲',
-  'Thể thao': '⚽',
-  'Giao lưu': '💬',
-  Khác: '✨',
+  'Lập trình': '💻',
+  'Tiếng Anh': '🗣️',
+  'Bóng đá': '⚽',
+  'Cầu lông': '🏸',
+  'Gym': '🏋️',
+  'Chạy bộ': '🏃',
+  'Xem phim': '🎬',
+  'Karaoke': '🎤',
+  'Âm nhạc': '🎵',
+  'Cờ vua': '♟️',
+  'Board games': '🎲',
+  'Nhiếp ảnh': '📸',
 }
 
 type CreateActivityScreenProps = {
@@ -18,6 +27,8 @@ type CreateActivityScreenProps = {
   loading: boolean
   banner: Banner
   categories: string[]
+  submitLabel?: string
+  loadingLabel?: string
   onChange: <K extends keyof CreateActivityForm>(field: K, value: CreateActivityForm[K]) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
   onCancel: () => void
@@ -29,6 +40,8 @@ export function CreateActivityScreen({
   loading,
   banner,
   categories,
+  submitLabel = 'Tạo hoạt động',
+  loadingLabel = 'Đang tạo...',
   onChange,
   onSubmit,
   onCancel,
@@ -324,7 +337,7 @@ export function CreateActivityScreen({
           Hủy bỏ
         </button>
         <button type="submit" className="primary-button create-submit-button" disabled={loading}>
-          {loading ? <ButtonSpinner label="Đang tạo..." /> : 'Tạo hoạt động'}
+          {loading ? <ButtonSpinner label={loadingLabel} /> : submitLabel}
         </button>
       </div>
     </form>

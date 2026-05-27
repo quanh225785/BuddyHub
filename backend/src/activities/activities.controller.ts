@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   Query,
   Req,
@@ -79,5 +80,29 @@ export class ActivitiesController {
     @UploadedFile() image?: UploadableImageFile,
   ) {
     return this.activitiesService.create(req.user.id, dto, image);
+  }
+
+  // PATCH /api/activities/:id
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    FileInterceptor('image', {
+      limits: { fileSize: ACTIVITY_IMAGE_MAX_BYTES },
+    }),
+  )
+  update(
+    @Param(
+      'id',
+      new ParseUUIDPipe({
+        version: '4',
+        exceptionFactory: () => new BadRequestException('ID hoạt động không hợp lệ'),
+      }),
+    )
+    id: string,
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: CreateActivityDto,
+    @UploadedFile() image?: UploadableImageFile,
+  ) {
+    return this.activitiesService.update(id, req.user.id, dto, image);
   }
 }

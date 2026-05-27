@@ -5,6 +5,7 @@ import ActivityDetailPage from "./pages/ActivityDetailPage";
 import ActivityListPage from "./pages/ActivityListPage";
 import ChangePasswordPage from "./pages/ChangePasswordPage.tsx";
 import CreateActivityPage from "./pages/CreateActivityPage";
+import EditActivityPage from "./pages/EditActivityPage";
 import MyEventsPage from "./pages/MyEventsPage";
 import ProfilePage from "./pages/ProfilePage";
 import UserProfilePage from "./pages/UserProfilePage";
@@ -140,6 +141,11 @@ function App() {
 
   if (pathname === "/activities/new") {
     return <CreateActivityPage />;
+  }
+
+  const editMatch = pathname.match(/^\/activities\/([^/]+)\/edit$/)
+  if (editMatch) {
+    return <EditActivityPage activityId={editMatch[1]} />
   }
 
   const activityId = getActivityDetailId(pathname);

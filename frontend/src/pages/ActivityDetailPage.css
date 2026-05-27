@@ -1,3 +1,13 @@
+.adp-join-modal .logout-modal-actions {
+  justify-content: stretch;
+}
+
+.adp-join-modal .logout-modal-cancel,
+.adp-join-modal .logout-modal-confirm {
+  flex: 1;
+  border-radius: 12px;
+}
+
 .activity-detail-page {
   position: relative;
   min-height: 100svh;

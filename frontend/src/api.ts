@@ -190,6 +190,25 @@ export async function fetchActivity(activityId: string) {
   return response.data;
 }
 
+export async function updateActivity(activityId: string, payload: CreateActivityPayload) {
+  const { image, ...fields } = payload
+  if (!image) {
+    const response = await api.patch(`/activities/${activityId}`, fields)
+    return response.data as { message: string; id: string }
+  }
+
+  const formData = new FormData()
+  Object.entries(fields).forEach(([key, value]) => {
+    if (value !== undefined) {
+      formData.append(key, String(value))
+    }
+  })
+  formData.append('image', image)
+
+  const response = await api.patch(`/activities/${activityId}`, formData)
+  return response.data as { message: string; id: string }
+}
+
 export async function joinActivity(activityId: string) {
   const response = await api.post<{ message: string; chatLink: string | null }>(
     `/activities/${activityId}/join`,

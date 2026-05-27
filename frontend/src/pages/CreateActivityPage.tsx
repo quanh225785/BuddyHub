@@ -102,7 +102,7 @@ export default function CreateActivityPage() {
 
     setLoading(true)
     try {
-      await createActivity({
+      const result = await createActivity({
         type: form.category,
         name: form.title.trim(),
         location: form.location.trim(),
@@ -118,11 +118,11 @@ export default function CreateActivityPage() {
         description: form.description.trim() || undefined,
       })
 
-      setBanner({ tone: 'success', text: 'Tạo hoạt động thành công! Đang chuyển về danh sách...' })
+      setBanner({ tone: 'success', text: 'Tạo hoạt động thành công! Đang chuyển tới trang chi tiết...' })
       if (redirectTimeoutRef.current !== null) {
         window.clearTimeout(redirectTimeoutRef.current)
       }
-      redirectTimeoutRef.current = window.setTimeout(() => navigate('/me'), 900)
+      redirectTimeoutRef.current = window.setTimeout(() => navigate(`/activities/${result.id}`), 900)
     } catch (error) {
       const status = error && typeof error === 'object' && 'response' in error
         ? (error as { response?: { status?: number } }).response?.status

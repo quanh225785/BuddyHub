@@ -314,9 +314,16 @@ export default function ActivityDetailPage({ activityId }: ActivityDetailPagePro
                     type="button"
                     className="activity-detail-join-btn"
                     onClick={() => navigate(`/activities/${activityId}/edit`)}
+                    disabled={activity.status !== 'OPEN'}
+                    title={activity.status !== 'OPEN' ? 'Chỉ có thể chỉnh sửa hoạt động đang mở đăng ký' : undefined}
                   >
                     ✏️ Chỉnh sửa hoạt động
                   </button>
+                  {activity.status !== 'OPEN' && (
+                    <p className="activity-detail-join-error">
+                      Hoạt động này không thể chỉnh sửa.
+                    </p>
+                  )}
                   {activity.chatLink && (
                     <>
                       <a

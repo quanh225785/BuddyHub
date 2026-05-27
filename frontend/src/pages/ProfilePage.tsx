@@ -473,7 +473,11 @@ export default function ProfilePage() {
                 key={activity.id}
                 className="activity-item"
                 onClick={() => navigate(`/activities/${activity.id}`)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/activities/${activity.id}`) }}
                 style={{ cursor: 'pointer' }}
+                tabIndex={0}
+                role="button"
+                aria-label={activity.title}
               >
                 {activity.imageUrl ? (
                   <img src={activity.imageUrl} alt="" className="activity-thumb" loading="lazy" />

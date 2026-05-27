@@ -190,6 +190,8 @@ export default function EditActivityPage({ activityId }: Props) {
               loading={loading}
               banner={banner}
               categories={categories}
+              submitLabel="Lưu thay đổi"
+              loadingLabel="Đang lưu..."
               onChange={handleChange}
               onSubmit={handleSubmit}
               onCancel={handleCancel}

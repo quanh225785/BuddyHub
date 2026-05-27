@@ -80,9 +80,12 @@ export function LoginScreen({
           {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
         </button>
 
-        <button className="text-button" type="button" onClick={onGoRegister}>
-          Chưa có tài khoản? Đăng ký ngay
-        </button>
+        <p className="auth-switch">
+          <span>Chưa có tài khoản? </span>
+          <button className="text-link-button" type="button" onClick={onGoRegister}>
+            Đăng ký ngay
+          </button>
+        </p>
       </form>
     </>
   )

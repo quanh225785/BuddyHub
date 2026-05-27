@@ -6,11 +6,22 @@ export type LoginForm = {
 }
 
 export type RegisterForm = {
-  name: string
   email: string
-  gender: 'male' | 'female' | ''
+}
+
+export type VerifyForm = {
+  otp: string
+}
+
+export type CompleteProfileForm = {
+  name: string
   password: string
   confirmPassword: string
+  gender: 'male' | 'female' | ''
+  faculty: string
+  schoolYear: string
+  interests: string[]
+  bio: string
 }
 
 export type ProfileForm = {
@@ -23,9 +34,6 @@ export type ProfileForm = {
 
 export type RegistrationSession = {
   email: string
-  password: string
-  name: string
-  gender: 'male' | 'female'
   tempToken: string
   prefill: {
     firstName: string

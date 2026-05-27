@@ -1,12 +1,12 @@
 import { type ClipboardEvent, type FormEvent, type KeyboardEvent, useEffect, useRef, useState } from 'react'
 import {
   fetchInterests,
-  getMe,
   login,
   registerUser,
   sendOtp,
   updateProfile,
   verifyOtp,
+  type ProfilePayload,
 } from '../api'
 import { getApiErrorMessage } from '../lib/errors'
 import '../App.css'
@@ -15,7 +15,7 @@ import { LoginScreen } from '../components/auth/LoginScreen'
 import { ProfileScreen } from '../components/auth/ProfileScreen'
 import { RegisterScreen } from '../components/auth/RegisterScreen'
 import { VerifyScreen } from '../components/auth/VerifyScreen'
-import type { Banner, FieldErrors, LoginForm, ProfileForm, RegisterForm, RegistrationSession, Screen } from '../types/auth'
+import type { Banner, FieldErrors, LoginForm, RegisterForm, RegistrationSession, Screen, CompleteProfileForm } from '../types/auth'
 
 const otpLength = 6
 const hustEmailDomain = '@sis.hust.edu.vn'
@@ -28,15 +28,14 @@ const loginDefaults: LoginForm = {
 }
 
 const registerDefaults: RegisterForm = {
-  name: '',
   email: '',
-  gender: '',
-  password: '',
-  confirmPassword: '',
 }
 
-const profileDefaults: ProfileForm = {
+const completeProfileDefaults: CompleteProfileForm = {
   name: '',
+  password: '',
+  confirmPassword: '',
+  gender: '',
   faculty: '',
   schoolYear: '',
   interests: [],
@@ -83,44 +82,6 @@ function getApiMessages(error: unknown) {
   return []
 }
 
-function mapRegisterApiErrors(error: unknown): FieldErrors<keyof RegisterForm> {
-  const apiMessages = getApiMessages(error)
-  const nextErrors: FieldErrors<keyof RegisterForm> = {}
-
-  for (const message of apiMessages) {
-    const lower = message.toLowerCase()
-
-    if (!nextErrors.confirmPassword && (lower.includes('nhập lại') || lower.includes('không khớp') || lower.includes('confirm'))) {
-      nextErrors.confirmPassword = message
-      continue
-    }
-
-    if (!nextErrors.password && (lower.includes('mật khẩu') || lower.includes('password'))) {
-      nextErrors.password = message
-      continue
-    }
-
-    if (!nextErrors.email && lower.includes('email')) {
-      nextErrors.email = message
-      continue
-    }
-
-    if (!nextErrors.name && (lower.includes('tên') || lower.includes('name'))) {
-      nextErrors.name = message
-    }
-  }
-
-  return nextErrors
-}
-
-function formatSchoolYearLabel(value: number) {
-  if (value <= 0) {
-    return 'Năm học'
-  }
-
-  return value === 1 ? 'Năm 1' : value <= 5 ? `Năm ${value}` : 'Cao học'
-}
-
 export default function AuthPage() {
   const [pathname, setPathname] = useState(() => {
     try {
@@ -144,10 +105,10 @@ export default function AuthPage() {
   })
   const [loginForm, setLoginForm] = useState<LoginForm>(loginDefaults)
   const [registerForm, setRegisterForm] = useState<RegisterForm>(registerDefaults)
-  const [profileForm, setProfileForm] = useState<ProfileForm>(profileDefaults)
+  const [completeProfileForm, setCompleteProfileForm] = useState<CompleteProfileForm>(completeProfileDefaults)
   const [loginErrors, setLoginErrors] = useState<FieldErrors<keyof LoginForm>>({})
-  const [registerErrors, setRegisterErrors] = useState<FieldErrors<keyof RegisterForm>>({})
-  const [profileErrors, setProfileErrors] = useState<FieldErrors<keyof ProfileForm>>({})
+  const [registerErrors, setRegisterErrors] = useState<FieldErrors<'email'>>({})
+  const [completeProfileErrors, setCompleteProfileErrors] = useState<FieldErrors<keyof CompleteProfileForm>>({})
   const [otpDigits, setOtpDigits] = useState<string[]>(Array.from({ length: otpLength }, () => ''))
   const [banner, setBanner] = useState<Banner>(null)
   const [interestOptions, setInterestOptions] = useState<string[]>([])
@@ -164,9 +125,6 @@ export default function AuthPage() {
         return null
       }
       const parsed = JSON.parse(raw) as RegistrationSession
-      if (parsed.gender !== 'male' && parsed.gender !== 'female') {
-        return null
-      }
       return parsed
     } catch {
       return null
@@ -268,15 +226,15 @@ export default function AuthPage() {
     setBanner(null)
   }
 
-  const updateRegisterField = (field: keyof RegisterForm, value: string) => {
-    setRegisterForm((current) => ({ ...current, [field]: value }))
-    setRegisterErrors((current) => ({ ...current, [field]: undefined }))
+  const updateRegisterField = (value: string) => {
+    setRegisterForm({ email: value })
+    setRegisterErrors({})
     setBanner(null)
   }
 
-  const updateProfileField = (field: keyof ProfileForm, value: string) => {
-    setProfileForm((current) => ({ ...current, [field]: value }))
-    setProfileErrors((current) => ({ ...current, [field]: undefined }))
+  const updateCompleteProfileField = (field: keyof CompleteProfileForm, value: string) => {
+    setCompleteProfileForm((current) => ({ ...current, [field]: value }))
+    setCompleteProfileErrors((current) => ({ ...current, [field]: undefined }))
     setBanner(null)
   }
 
@@ -325,39 +283,16 @@ export default function AuthPage() {
     }
   }
 
+
   const handleRegisterSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    const nextErrors: FieldErrors<keyof RegisterForm> = {}
-
-    if (!registerForm.name.trim()) {
-      nextErrors.name = 'Vui lòng nhập tên'
-    } else if (registerForm.name.trim().length < 2) {
-      nextErrors.name = 'Tên phải có ít nhất 2 ký tự'
-    }
+    const nextErrors: FieldErrors<'email'> = {}
 
     if (!registerForm.email.trim()) {
       nextErrors.email = 'Vui lòng nhập email HUST'
     } else if (!isHustEmail(registerForm.email)) {
       nextErrors.email = 'Email HUST không đúng định dạng'
-    }
-
-    if (!registerForm.gender) {
-      nextErrors.gender = 'Vui lòng chọn giới tính'
-    }
-
-    if (!registerForm.password.trim()) {
-      nextErrors.password = 'Vui lòng nhập mật khẩu'
-    } else if (registerForm.password.length < 8) {
-      nextErrors.password = 'Mật khẩu phải có ít nhất 8 ký tự'
-    } else if (!passwordPolicyRegex.test(registerForm.password)) {
-      nextErrors.password = 'Mật khẩu phải có ít nhất 1 chữ hoa và 1 chữ số'
-    }
-
-    if (!registerForm.confirmPassword.trim()) {
-      nextErrors.confirmPassword = 'Vui lòng nhập lại mật khẩu'
-    } else if (registerForm.confirmPassword !== registerForm.password) {
-      nextErrors.confirmPassword = 'Mật khẩu nhập lại không khớp'
     }
 
     setRegisterErrors(nextErrors)
@@ -375,24 +310,22 @@ export default function AuthPage() {
 
       setPendingRegistration({
         email: normalizedEmail,
-        password: registerForm.password,
-        name: registerForm.name.trim(),
-        gender: registerForm.gender as 'male' | 'female',
         tempToken: '',
         prefill: {
-          firstName: registerForm.name.trim().split(/\s+/)[0] ?? registerForm.name.trim(),
+          firstName: '',
           studentId: '',
           schoolYear: 1,
         },
       })
       setOtpDigits(Array.from({ length: otpLength }, () => ''))
+      setCompleteProfileForm(completeProfileDefaults)
+      setCompleteProfileErrors({})
       setBanner({ tone: 'success', text: 'Đã gửi mã xác thực đến email HUST của bạn.' })
       setScreen('verify')
     } catch (error) {
-      const mappedErrors = mapRegisterApiErrors(error)
-      if (Object.keys(mappedErrors).length > 0) {
-        setRegisterErrors((current) => ({ ...current, ...mappedErrors }))
-        setBanner(null)
+      const apiMessages = getApiMessages(error)
+      if (apiMessages.length > 0) {
+        setRegisterErrors({ email: apiMessages[0] })
       } else {
         setBanner({ tone: 'error', text: getApiErrorMessage(error, 'Gửi mã xác thực thất bại') })
       }
@@ -492,43 +425,15 @@ export default function AuthPage() {
         }
       })
 
-      // Immediately create the account now that OTP is verified so the user exists
-      // and we can use the returned access token to update profile safely.
-      try {
-        const registerData = await registerUser({
-          name: pendingRegistration.name || (typeof prefill.firstName === 'string' ? prefill.firstName : ''),
-          password: pendingRegistration.password,
-          tempToken,
-          gender: pendingRegistration.gender,
-        })
-
-        const accessToken = registerData?.accessToken
-        if (typeof accessToken !== 'string' || !accessToken.trim()) {
-          throw new Error('Không nhận được accessToken từ máy chủ')
-        }
-
-        // persist access token for subsequent profile update and API calls
-        localStorage.setItem('access_token', accessToken)
-
-        setPendingRegistration((current) => (current ? { ...current, tempToken, accessToken } : current))
-
-        setProfileForm({
-          name: pendingRegistration.name || (typeof prefill.firstName === 'string' ? prefill.firstName : ''),
-          faculty: '',
-          schoolYear:
-            typeof prefill.schoolYear === 'number' ? String(prefill.schoolYear) : String(profileDefaults.schoolYear),
-          interests: [],
-          bio: '',
-        })
-        setProfileErrors({})
-        setBanner({ tone: 'success', text: 'Tài khoản đã được tạo. Hãy hoàn tất hồ sơ.' })
-        setScreen('profile')
-      } catch (regErr) {
-        // If immediate registration fails, surface the error and stay on verify screen
-        setBanner({ tone: 'error', text: getApiErrorMessage(regErr, 'Tạo tài khoản thất bại') })
-        setVerifyLoading(false)
-        return
-      }
+      // Move to complete profile screen - do not create account yet
+      setCompleteProfileForm((current) => ({
+        ...current,
+        name: typeof prefill.firstName === 'string' ? prefill.firstName : '',
+        schoolYear: typeof prefill.schoolYear === 'number' ? String(prefill.schoolYear) : '',
+      }))
+      setCompleteProfileErrors({})
+      setBanner({ tone: 'success', text: 'Email xác thực thành công. Vui lòng hoàn thiện hồ sơ.' })
+      setScreen('profile')
     } catch (error) {
       setBanner({ tone: 'error', text: getApiErrorMessage(error, 'Xác thực OTP thất bại') })
     } finally {
@@ -558,7 +463,7 @@ export default function AuthPage() {
   }
 
   const toggleInterest = (interest: string) => {
-    setProfileForm((current) => {
+    setCompleteProfileForm((current) => {
       const isSelected = current.interests.includes(interest)
       const nextInterests = isSelected
         ? current.interests.filter((item) => item !== interest)
@@ -572,25 +477,44 @@ export default function AuthPage() {
   const handleProfileSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    const nextErrors: FieldErrors<keyof ProfileForm> = {}
+    const nextErrors: FieldErrors<keyof CompleteProfileForm> = {}
 
-    if (!profileForm.name.trim()) {
-      nextErrors.name = 'Vui lòng nhập tên'
+    // Tên được auto-fill từ HUST, không validate
+    // const name_valid = completeProfileForm.name.trim()
+    // if (!name_valid) nextErrors.name = 'Vui lòng nhập tên'
+
+    if (!completeProfileForm.password.trim()) {
+      nextErrors.password = 'Vui lòng nhập mật khẩu'
+    } else if (completeProfileForm.password.length < 8) {
+      nextErrors.password = 'Mật khẩu phải có ít nhất 8 ký tự'
+    } else if (!passwordPolicyRegex.test(completeProfileForm.password)) {
+      nextErrors.password = 'Mật khẩu phải có ít nhất 1 chữ hoa và 1 chữ số'
     }
 
-    if (!profileForm.faculty.trim()) {
+    if (!completeProfileForm.confirmPassword.trim()) {
+      nextErrors.confirmPassword = 'Vui lòng nhập lại mật khẩu'
+    } else if (completeProfileForm.confirmPassword !== completeProfileForm.password) {
+      nextErrors.confirmPassword = 'Mật khẩu nhập lại không khớp'
+    }
+
+    if (!completeProfileForm.gender) {
+      nextErrors.gender = 'Vui lòng chọn giới tính'
+    }
+
+    // Validate profile fields
+    if (!completeProfileForm.faculty.trim()) {
       nextErrors.faculty = 'Vui lòng chọn khoa / viện'
     }
 
-    if (!profileForm.schoolYear.trim()) {
+    if (!completeProfileForm.schoolYear.trim()) {
       nextErrors.schoolYear = 'Vui lòng chọn năm học'
     }
 
-    if (profileForm.bio.trim().length > 200) {
+    if (completeProfileForm.bio.trim().length > 200) {
       nextErrors.bio = 'Giới thiệu không được vượt quá 200 ký tự'
     }
 
-    setProfileErrors(nextErrors)
+    setCompleteProfileErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) {
       return
     }
@@ -604,81 +528,44 @@ export default function AuthPage() {
     setBanner(null)
 
     try {
-      let accessToken = pendingRegistration.accessToken
+      // Step 1: Register the user account with name, password, gender
+      const registerData = await registerUser({
+        name: completeProfileForm.name.trim(),
+        password: completeProfileForm.password,
+        tempToken: pendingRegistration.tempToken,
+        gender: completeProfileForm.gender as 'male' | 'female',
+      })
 
-      if (!accessToken) {
-        if (!pendingRegistration.tempToken) {
-          throw new Error('Phiên xác thực hết hạn. Vui lòng đăng ký lại.')
-        }
-
-        const registerData = await registerUser({
-          name: profileForm.name.trim(),
-          password: pendingRegistration.password,
-          tempToken: pendingRegistration.tempToken,
-          gender: pendingRegistration.gender,
-        })
-
-        accessToken = registerData?.accessToken
-        if (typeof accessToken !== 'string' || !accessToken.trim()) {
-          throw new Error('Không nhận được accessToken từ máy chủ')
-        }
-
-        setPendingRegistration((current) => (current ? { ...current, accessToken } : current))
+      const accessToken = registerData?.accessToken
+      if (typeof accessToken !== 'string' || !accessToken.trim()) {
+        throw new Error('Không nhận được accessToken từ máy chủ')
       }
 
       localStorage.setItem('access_token', accessToken)
 
-      // Build payload and omit `interests` when empty to avoid nested-write issues on the backend
-      const payload: Record<string, unknown> = {
-        name: profileForm.name.trim(),
-        faculty: profileForm.faculty,
-        schoolYear: Number(profileForm.schoolYear),
-        bio: profileForm.bio.trim() || null,
+      // Step 2: Update profile with additional information
+      const payload: ProfilePayload = {
+        name: completeProfileForm.name.trim(),
+        faculty: completeProfileForm.faculty.trim() || null,
+        schoolYear: Number(completeProfileForm.schoolYear) || null,
+        bio: completeProfileForm.bio.trim() || null,
       }
-
-      if (Array.isArray(profileForm.interests) && profileForm.interests.length > 0) {
-        payload.interests = profileForm.interests
-      }
-
-      // Harden payload and token usage to avoid frontend-caused server errors
-      const storedToken = localStorage.getItem('access_token') || accessToken
-      if (!storedToken) {
-        throw new Error('Không tìm thấy access token. Vui lòng đăng nhập lại hoặc thực hiện lại xác thực OTP.')
-      }
-
-      // Sanitize and normalize fields
-      const safeName = String(profileForm.name || '').trim()
-      const safeFaculty = String(profileForm.faculty || '').trim() || null
-      const safeSchoolYear = Number(profileForm.schoolYear) || null
-      const safeBio = String(profileForm.bio || '').trim() || null
 
       // Only include interests that exist in the fetched interestOptions to avoid DB validation errors
       let safeInterests: string[] = []
-      if (Array.isArray(profileForm.interests) && profileForm.interests.length > 0 && Array.isArray(interestOptions)) {
-        safeInterests = profileForm.interests.filter((it) => interestOptions.includes(it))
+      if (
+        Array.isArray(completeProfileForm.interests) &&
+        completeProfileForm.interests.length > 0 &&
+        Array.isArray(interestOptions)
+      ) {
+        safeInterests = completeProfileForm.interests.filter((it) => interestOptions.includes(it))
       }
 
-      const safePayload: Record<string, unknown> = { name: safeName }
-      if (safeFaculty !== null) safePayload.faculty = safeFaculty
-      if (safeSchoolYear !== null) safePayload.schoolYear = safeSchoolYear
-      safePayload.bio = safeBio
-      if (safeInterests.length > 0) safePayload.interests = safeInterests
-
-      // final debug log for browser console
-      // eslint-disable-next-line no-console
-      console.debug('[ProfileSubmit] safePayload:', safePayload, 'using token:', Boolean(storedToken))
-
-      // Verify token and current user before attempting profile update to avoid backend errors
-      const meData = await getMe({ token: storedToken })
-      const currentUserId = meData?.id
-      // eslint-disable-next-line no-console
-      console.debug('[ProfileSubmit] /users/me response id:', currentUserId)
-
-      if (!currentUserId) {
-        throw new Error('Token không hợp lệ hoặc server không trả về thông tin người dùng. Vui lòng đăng nhập lại.')
+      if (safeInterests.length > 0) {
+        payload.interests = safeInterests
       }
 
-      await updateProfile(safePayload, { token: storedToken })
+      await updateProfile(payload, { token: accessToken })
 
       localStorage.removeItem('access_token')
       setPendingRegistration(null)
@@ -688,11 +575,11 @@ export default function AuthPage() {
         password: '',
       })
       setOtpDigits(Array.from({ length: otpLength }, () => ''))
-      setProfileForm(profileDefaults)
-      setBanner({ tone: 'success', text: 'Hồ sơ đã hoàn tất. Vui lòng đăng nhập lại để tiếp tục.' })
+      setCompleteProfileForm(completeProfileDefaults)
+      setBanner({ tone: 'success', text: 'Đăng ký thành công! Vui lòng đăng nhập.' })
       setScreen('login')
     } catch (error) {
-      setBanner({ tone: 'error', text: getApiErrorMessage(error, 'Lưu profile thất bại') })
+      setBanner({ tone: 'error', text: getApiErrorMessage(error, 'Hoàn tất đăng ký thất bại') })
     } finally {
       setProfileLoading(false)
     }
@@ -701,7 +588,7 @@ export default function AuthPage() {
   const resetRegisterFlow = () => {
     setPendingRegistration(null)
     setOtpDigits(Array.from({ length: otpLength }, () => ''))
-    setProfileForm(profileDefaults)
+    setCompleteProfileForm(completeProfileDefaults)
     setBanner(null)
     setScreen('register')
   }
@@ -738,11 +625,11 @@ export default function AuthPage() {
 
             {screen === 'register' && (
               <RegisterScreen
-                form={registerForm}
+                email={registerForm.email}
                 errors={registerErrors}
                 loading={registerLoading}
                 banner={banner}
-                onChange={updateRegisterField}
+                onChange={(value) => updateRegisterField(value)}
                 onSubmit={handleRegisterSubmit}
                 onGoLogin={() => setScreen('login')}
               />
@@ -771,18 +658,13 @@ export default function AuthPage() {
             {screen === 'profile' && (
               <ProfileScreen
                 email={pendingRegistration?.email ?? ''}
-                verifiedName={pendingRegistration?.name ?? profileForm.name}
-                studentId={pendingRegistration?.prefill.studentId ?? ''}
-                suggestedYearLabel={
-                  pendingRegistration ? formatSchoolYearLabel(pendingRegistration.prefill.schoolYear) : 'Năm học'
-                }
-                form={profileForm}
-                errors={profileErrors}
+                form={completeProfileForm}
+                errors={completeProfileErrors}
                 loading={profileLoading}
                 banner={banner}
                 interestOptions={interestOptions}
                 interestLoading={interestLoading}
-                onChange={updateProfileField}
+                onChange={updateCompleteProfileField}
                 onToggleInterest={toggleInterest}
                 onSubmit={handleProfileSubmit}
               />

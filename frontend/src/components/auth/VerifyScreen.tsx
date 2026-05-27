@@ -1,5 +1,6 @@
 import type { Banner } from '../../types/auth'
 import { ShieldCheckIcon } from './icons'
+import { StepIndicator } from './StepIndicator'
 
 type VerifyScreenProps = {
   email: string
@@ -34,6 +35,8 @@ export function VerifyScreen({
 }: VerifyScreenProps) {
   return (
     <>
+      <StepIndicator currentStep={2} />
+
       <div className="screen-icon screen-icon-verify" aria-hidden="true">
         <ShieldCheckIcon className="screen-icon-svg" />
       </div>
@@ -41,7 +44,7 @@ export function VerifyScreen({
       <div className="card-title-block">
         <h1>Nhập mã xác thực</h1>
         <p>
-          Mã 6 chữ số đã được gửi đến <strong>{email || 'email HUST của bạn'}</strong>
+          Bước 2: Mã 6 chữ số đã được gửi đến <strong>{email || 'email HUST của bạn'}</strong>
         </p>
       </div>
 

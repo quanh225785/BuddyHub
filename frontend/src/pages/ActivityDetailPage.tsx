@@ -23,7 +23,8 @@ function getCurrentUserId(): string | null {
   const token = localStorage.getItem('access_token')
   if (!token) return null
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]))
+    const b64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+    const payload = JSON.parse(atob(b64))
     return (payload.sub ?? payload.id ?? null) as string | null
   } catch {
     return null
@@ -46,7 +47,7 @@ function formatTimeRange(startTime: string, endTime?: string | null) {
 }
 
 function participantInitial(name: string) {
-  return name.trim().charAt(0).toUpperCase()
+  return name.trim().charAt(0).toUpperCase() || '?'
 }
 
 export default function ActivityDetailPage({ activityId }: ActivityDetailPageProps) {
@@ -119,13 +120,22 @@ export default function ActivityDetailPage({ activityId }: ActivityDetailPagePro
     activity.gender !== 'ALL' &&
     userGender !== null &&
     userGender !== activity.gender
-  const showJoinButton = !isHost && !alreadyJoined && !chatLink && !genderMismatch && source !== 'my-events'
+  const showJoinButton =
+    !isHost &&
+    !alreadyJoined &&
+    !chatLink &&
+    !genderMismatch &&
+    source !== 'my-events' &&
+    activity?.status === 'OPEN' &&
+    spotsLeft > 0 &&
+    (activity?.deadline == null || new Date() <= new Date(activity.deadline))
   const resolvedChatLink = chatLink ?? (alreadyJoined ? (activity?.chatLink ?? null) : null)
 
   const spotsLeft = activity ? activity.maxSlots - activity.currentParticipants : 0
-  const fillPercent = activity
-    ? Math.min(100, Math.round((activity.currentParticipants / activity.maxSlots) * 100))
-    : 0
+  const fillPercent =
+    activity && activity.maxSlots > 0
+      ? Math.min(100, Math.round((activity.currentParticipants / activity.maxSlots) * 100))
+      : 0
 
   return (
     <div className="activity-detail-page">

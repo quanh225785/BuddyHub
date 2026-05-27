@@ -263,6 +263,10 @@ export class ActivitiesService {
             throw new NotFoundException('Không tìm thấy hoạt động');
           }
 
+          if (activity.hostId === userId) {
+            throw new BadRequestException('Bạn không thể tham gia hoạt động của chính mình');
+          }
+
           const now = new Date();
           if (now > activity.deadline) {
             throw new BadRequestException('Hoạt động đã hết hạn đăng ký');
@@ -336,7 +340,7 @@ export class ActivitiesService {
         throw error;
       }
 
-      throw new InternalServerErrorException('error');
+      throw new InternalServerErrorException('Không thể tham gia hoạt động');
     }
   }
 

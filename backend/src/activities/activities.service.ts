@@ -148,6 +148,7 @@ export class ActivitiesService {
         description: activity.description,
         status: activity.status,
         gender: activity.gender,
+        chatLink: activity.chatLink,
         host: activity.host,
         participants,
       };
@@ -238,6 +239,108 @@ export class ActivitiesService {
       }
 
       throw new InternalServerErrorException('error');
+    }
+  }
+
+  async join(activityId: string, userId: string) {
+    try {
+      let chatLink: string | null = null;
+
+      await this.prisma.$transaction(
+        async (tx) => {
+          const activity = await tx.activity.findUnique({
+            where: { id: activityId },
+            include: {
+              _count: {
+                select: {
+                  participants: { where: { status: ParticipantStatus.JOINED } },
+                },
+              },
+            },
+          });
+
+          if (!activity) {
+            throw new NotFoundException('Không tìm thấy hoạt động');
+          }
+
+          if (activity.hostId === userId) {
+            throw new BadRequestException('Bạn không thể tham gia hoạt động của chính mình');
+          }
+
+          const now = new Date();
+          if (now > activity.deadline) {
+            throw new BadRequestException('Hoạt động đã hết hạn đăng ký');
+          }
+
+          if (
+            activity.status === ActivityStatus.FULL ||
+            activity.status === ActivityStatus.CLOSED ||
+            activity.status === ActivityStatus.CANCELLED ||
+            activity.status === ActivityStatus.FINISHED
+          ) {
+            throw new BadRequestException('Hoạt động không còn nhận người tham gia');
+          }
+
+          const currentCount = activity._count.participants;
+          if (currentCount >= activity.maxSlots) {
+            throw new BadRequestException('Hoạt động đã đủ số lượng người tham gia');
+          }
+
+          if (activity.gender !== Gender.ALL) {
+            const user = await tx.user.findUnique({
+              where: { id: userId },
+              select: { gender: true },
+            });
+            if (!user || user.gender !== activity.gender) {
+              throw new BadRequestException('Bạn không đáp ứng yêu cầu giới tính của hoạt động');
+            }
+          }
+
+          const existing = await tx.activityParticipant.findUnique({
+            where: { activityId_userId: { activityId, userId } },
+          });
+
+          if (existing && existing.status === ParticipantStatus.JOINED) {
+            throw new BadRequestException('Bạn đã tham gia hoạt động này rồi');
+          }
+
+          await tx.activityParticipant.upsert({
+            where: { activityId_userId: { activityId, userId } },
+            create: {
+              activityId,
+              userId,
+              status: ParticipantStatus.JOINED,
+              joinedAt: now,
+            },
+            update: {
+              status: ParticipantStatus.JOINED,
+              joinedAt: now,
+              cancelledAt: null,
+            },
+          });
+
+          if (currentCount + 1 >= activity.maxSlots) {
+            await tx.activity.update({
+              where: { id: activityId },
+              data: { status: ActivityStatus.FULL },
+            });
+          }
+
+          chatLink = activity.chatLink;
+        },
+        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+      );
+
+      return { message: 'OK', chatLink };
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Không thể tham gia hoạt động');
     }
   }
 

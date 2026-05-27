@@ -133,3 +133,10 @@ export async function fetchActivity(activityId: string) {
   const response = await api.get<ActivityDetail>(`/activities/${activityId}`);
   return response.data;
 }
+
+export async function joinActivity(activityId: string) {
+  const response = await api.post<{ message: string; chatLink: string | null }>(
+    `/activities/${activityId}/join`,
+  )
+  return response.data
+}

@@ -41,6 +41,23 @@ export class ActivitiesController {
     return this.activitiesService.findOne(id);
   }
 
+  // POST /api/activities/:id/join
+  @Post(':id/join')
+  @UseGuards(JwtAuthGuard)
+  join(
+    @Param(
+      'id',
+      new ParseUUIDPipe({
+        version: '4',
+        exceptionFactory: () => new BadRequestException('ID hoạt động không hợp lệ'),
+      }),
+    )
+    id: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.activitiesService.join(id, req.user.id);
+  }
+
   // POST /api/activities
   @Post()
   @UseGuards(JwtAuthGuard)

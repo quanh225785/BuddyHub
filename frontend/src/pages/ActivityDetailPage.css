@@ -10,7 +10,7 @@
 .activity-detail-frame {
   position: relative;
   z-index: 1;
-  max-width: 720px;
+  max-width: 1100px;
   margin: 0 auto;
   display: grid;
   gap: 20px;
@@ -49,13 +49,21 @@
   border: 1px solid rgba(208, 103, 81, 0.32);
 }
 
-.activity-detail-card {
-  padding: 28px 24px;
+/* Two-column layout */
+.activity-detail-layout {
   display: grid;
-  gap: 22px;
-  text-align: left;
+  grid-template-columns: 1fr 300px;
+  gap: 24px;
+  align-items: start;
 }
 
+.activity-detail-main {
+  padding: 28px 24px;
+  display: grid;
+  gap: 24px;
+}
+
+/* Hero */
 .activity-detail-hero {
   display: grid;
   gap: 12px;
@@ -78,8 +86,185 @@
   color: #2d2a33;
 }
 
-.activity-detail-section h2 {
-  margin: 0 0 10px;
+/* Info grid */
+.adp-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.adp-info-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  background: #faf7f4;
+  border-radius: 14px;
+  border: 1px solid #efe0d0;
+}
+
+.adp-info-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.adp-icon-orange { background: #fff3ee; }
+.adp-icon-pink   { background: #ffeef3; }
+.adp-icon-amber  { background: #fff8ee; }
+.adp-icon-red    { background: #fff0ee; }
+.adp-icon-green  { background: #eef7f0; }
+
+.adp-info-label {
+  margin: 0 0 2px;
+  font-size: 0.75rem;
+  color: #8b94a8;
+  font-weight: 600;
+}
+
+.adp-info-value {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #2f3138;
+}
+
+/* Description */
+.adp-desc-card {
+  background: #faf7f4;
+  border-radius: 16px;
+  padding: 18px 20px;
+  border: 1px solid #efe0d0;
+}
+
+.adp-desc-card h3 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #2f3138;
+}
+
+.adp-desc-card p {
+  margin: 0;
+  color: #4e5667;
+  line-height: 1.6;
+  font-size: 0.94rem;
+  white-space: pre-wrap;
+}
+
+/* Participants */
+.adp-participants-section {
+  display: grid;
+  gap: 12px;
+}
+
+.adp-participants-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.86rem;
+  color: #8b94a8;
+  font-weight: 600;
+}
+
+.adp-progress {
+  height: 7px;
+  background: #f0e8e0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.adp-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ed742d, #de5e24);
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.adp-participants-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.adp-participants-title-row h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #2f3138;
+}
+
+.adp-participants-title-row span {
+  font-size: 0.84rem;
+  color: #8b94a8;
+  font-weight: 600;
+}
+
+.adp-participants-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.adp-participant-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #fff8f1;
+  border-radius: 14px;
+  border: 1px solid #efe0d0;
+}
+
+.adp-participant-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #ffe9d6;
+  color: #ef6a2e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.adp-participant-name {
+  font-weight: 700;
+  font-size: 0.94rem;
+  color: #2f3138;
+}
+
+.activity-detail-muted {
+  margin: 0;
+  color: #8b94a8;
+  font-size: 0.9rem;
+}
+
+/* Sidebar */
+.activity-detail-sidebar {
+  display: grid;
+  gap: 16px;
+}
+
+.activity-detail-sidebar-card {
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid #efe0d0;
+  border-radius: 20px;
+  display: grid;
+  gap: 12px;
+}
+
+.activity-detail-sidebar-label {
+  margin: 0;
   font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -87,28 +272,43 @@
   color: #8b94a8;
 }
 
-.activity-detail-facts {
-  margin: 0;
-  display: grid;
-  gap: 12px;
+.adp-host-own-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.activity-detail-facts div {
-  display: grid;
-  gap: 4px;
+.adp-host-own-badge span {
+  font-size: 1.4rem;
 }
 
-.activity-detail-facts dt {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: #8b94a8;
-}
-
-.activity-detail-facts dd {
+.adp-host-own-badge p {
   margin: 0;
   font-size: 0.96rem;
-  font-weight: 600;
+  font-weight: 700;
   color: #2f3138;
+}
+
+.adp-status-pill {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.adp-status-open       { background: #e8f5e9; color: #2e7d32; }
+.adp-status-full       { background: #fff3e0; color: #e65100; }
+.adp-status-closed     { background: #f5f5f5; color: #757575; }
+.adp-status-cancelled  { background: #fce4ec; color: #c62828; }
+.adp-status-finished   { background: #f5f5f5; color: #757575; }
+
+.activity-detail-joined-label {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #2f3138;
+  text-align: center;
 }
 
 .activity-detail-host-row {
@@ -117,28 +317,10 @@
   gap: 10px;
 }
 
-.activity-detail-host-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0;
-  margin: 0;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  color: inherit;
-  font: inherit;
-}
-
-.activity-detail-host-link:focus {
-  outline: 2px solid rgba(222, 94, 36, 0.18);
-  border-radius: 8px;
-}
-
 .activity-detail-host-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 999px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   object-fit: cover;
 }
 
@@ -151,83 +333,13 @@
   font-size: 0.88rem;
 }
 
-.activity-detail-text {
-  margin: 0;
-  color: #4e5667;
-  line-height: 1.55;
-  font-size: 0.96rem;
-}
-
-.activity-detail-description {
-  white-space: pre-wrap;
-}
-
-.activity-detail-participant-count {
-  margin: 0 0 12px;
-  color: #5d6271;
-  font-size: 0.94rem;
-}
-
-.activity-detail-participant-count strong {
-  color: #de5e24;
-  font-size: 1.05rem;
-}
-
-.activity-detail-muted {
-  margin: 0;
-  color: #8b94a8;
-  font-size: 0.9rem;
-}
-
-.activity-detail-participants {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 10px;
-}
-
-.activity-detail-participants li {
-  display: grid;
-  gap: 2px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: #fff8f1;
-  border: 1px solid #efe0d0;
-}
-
-.activity-detail-participant-name {
+.activity-detail-host-name {
   font-weight: 700;
+  font-size: 0.96rem;
   color: #2f3138;
-  font-size: 0.94rem;
 }
 
-.activity-detail-participant-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  color: inherit;
-  font: inherit;
-}
-
-.activity-detail-participant-link:hover .activity-detail-participant-name {
-  text-decoration: underline;
-  color: #de5e24;
-}
-
-.activity-detail-join-hint {
-  margin: 0;
-  text-align: center;
-}
-
-.activity-detail-actions {
-  padding-top: 4px;
-}
-
+/* Join button */
 .activity-detail-join-btn {
   width: 100%;
   border: none;
@@ -250,12 +362,73 @@
   opacity: 0.65;
 }
 
-@media (max-width: 640px) {
+/* Chat link */
+.activity-detail-chat-link {
+  display: block;
+  border: 2px solid #ed742d;
+  border-radius: 14px;
+  padding: 12px 18px;
+  font-weight: 800;
+  font-size: 0.96rem;
+  text-align: center;
+  text-decoration: none;
+  color: #ed742d;
+}
+
+.activity-detail-chat-link:hover {
+  background: rgba(237, 116, 45, 0.06);
+}
+
+.activity-detail-chat-url {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #888;
+  text-align: center;
+  word-break: break-all;
+  user-select: all;
+}
+
+.adp-gender-block {
+  text-align: center;
+}
+
+.adp-gender-block-icon {
+  font-size: 1.6rem;
+}
+
+.adp-gender-block p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #5d6271;
+  line-height: 1.5;
+}
+
+.activity-detail-join-error {
+  margin: 0;
+  font-size: 0.86rem;
+  color: #d63b3b;
+  text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
   .activity-detail-page {
     padding: 14px 12px 32px;
   }
 
-  .activity-detail-card {
-    padding: 22px 18px;
+  .activity-detail-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .activity-detail-sidebar {
+    order: -1;
+  }
+
+  .activity-detail-main {
+    padding: 20px 16px;
+  }
+
+  .adp-info-grid {
+    grid-template-columns: 1fr;
   }
 }

@@ -1,94 +1,141 @@
-import { type ReactNode, useEffect, useState } from "react";
-import { fetchActivity } from "../api";
-import { AppNav } from "../components/layout/AppNav";
-import { getApiErrorMessage } from "../lib/errors";
-import {
-  formatActivityDateTime,
-  formatActivityGender,
-  formatActivityTimeRange,
-} from "../lib/formatActivity";
-import { getCategoryStyle } from "../lib/categoryStyle";
-import { navigate } from "../lib/navigation";
-import type { ActivityDetail } from "../types/activity";
-import "../App.css";
-import "./ActivityDetailPage.css";
+import { useEffect, useState } from 'react'
+import { fetchActivity, getMe, joinActivity } from '../api'
+import { AppNav } from '../components/layout/AppNav'
+import { getApiErrorMessage } from '../lib/errors'
+import { formatActivityDateTime, formatActivityGender } from '../lib/formatActivity'
+import { getCategoryStyle } from '../lib/categoryStyle'
+import { navigate } from '../lib/navigation'
+import type { ActivityDetail } from '../types/activity'
+import '../App.css'
+import './ActivityDetailPage.css'
 
 type ActivityDetailPageProps = {
-  activityId: string;
-};
+  activityId: string
+}
 
 function getDetailSource() {
-  if (typeof window === "undefined") return "browse";
-  const params = new URLSearchParams(window.location.search);
-  return params.get("from") === "my-events" ? "my-events" : "browse";
+  if (typeof window === 'undefined') return 'browse'
+  const params = new URLSearchParams(window.location.search)
+  return params.get('from') === 'my-events' ? 'my-events' : 'browse'
 }
 
-function hostInitial(name?: string) {
-  const char = name?.trim()?.charAt(0);
-  return char ? char.toUpperCase() : "?";
+function getCurrentUserId(): string | null {
+  const token = localStorage.getItem('access_token')
+  if (!token) return null
+  try {
+    const b64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+    const payload = JSON.parse(atob(b64))
+    return (payload.sub ?? payload.id ?? null) as string | null
+  } catch {
+    return null
+  }
 }
 
-function DetailSection({
-  title,
-  children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
-  return (
-    <section className="activity-detail-section">
-      <h2>{title}</h2>
-      {children}
-    </section>
-  );
+function formatDateOnly(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString('vi-VN', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
 }
 
-export default function ActivityDetailPage({
-  activityId,
-}: ActivityDetailPageProps) {
-  const [activity, setActivity] = useState<ActivityDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const source = getDetailSource();
+function formatTimeRange(startTime: string, endTime?: string | null) {
+  const fmt = (d: string) =>
+    new Date(d).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+  return endTime ? `${fmt(startTime)} - ${fmt(endTime)}` : fmt(startTime)
+}
+
+function participantInitial(name: string) {
+  return name.trim().charAt(0).toUpperCase() || '?'
+}
+
+export default function ActivityDetailPage({ activityId }: ActivityDetailPageProps) {
+  const [activity, setActivity] = useState<ActivityDetail | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [joining, setJoining] = useState(false)
+  const [chatLink, setChatLink] = useState<string | null>(null)
+  const [joinError, setJoinError] = useState<string | null>(null)
+  const [userGender, setUserGender] = useState<string | null>(null)
+  const source = getDetailSource()
 
   useEffect(() => {
-    let alive = true;
-
+    let alive = true
     const load = async () => {
       try {
-        setLoading(true);
-        setError(null);
-        const data = await fetchActivity(activityId);
-        if (!alive) return;
-        setActivity(data);
+        setLoading(true)
+        setError(null)
+        const data = await fetchActivity(activityId)
+        if (!alive) return
+        setActivity(data)
       } catch (err) {
-        if (!alive) return;
-        setError(getApiErrorMessage(err, "Không thể tải chi tiết hoạt động"));
-        setActivity(null);
+        if (!alive) return
+        setError(getApiErrorMessage(err, 'Không thể tải chi tiết hoạt động'))
+        setActivity(null)
       } finally {
-        if (alive) {
-          setLoading(false);
-        }
+        if (alive) setLoading(false)
       }
-    };
+    }
+    void load()
+    return () => { alive = false }
+  }, [activityId])
 
-    void load();
-    return () => {
-      alive = false;
-    };
-  }, [activityId]);
+  useEffect(() => {
+    if (!localStorage.getItem('access_token')) return
+    getMe().then((u) => setUserGender(u?.gender ?? null)).catch(() => {})
+  }, [])
+
+  const handleJoin = async () => {
+    try {
+      setJoining(true)
+      setJoinError(null)
+      const result = await joinActivity(activityId)
+      setChatLink(result.chatLink)
+      const updated = await fetchActivity(activityId)
+      setActivity(updated)
+    } catch (err) {
+      setJoinError(getApiErrorMessage(err, 'Không thể tham gia hoạt động'))
+    } finally {
+      setJoining(false)
+    }
+  }
 
   const handleBack = () => {
-    navigate(source === "my-events" ? "/my-events" : "/activities");
-  };
+    navigate(source === 'my-events' ? '/my-events' : '/activities')
+  }
 
-  const categoryStyle = activity
-    ? getCategoryStyle(activity.categoryName)
-    : null;
-  const hostDisplayName = activity
-    ? (activity.host?.name ?? "BuddyHub member")
-    : "";
-  const showJoinButton = source !== "my-events";
+  const categoryStyle = activity ? getCategoryStyle(activity.categoryName) : null
+  const hostDisplayName = activity ? (activity.host?.name ?? 'BuddyHub member') : ''
+  const currentUserId = getCurrentUserId()
+  const spotsLeft = activity ? activity.maxSlots - activity.currentParticipants : 0
+  const isHost = currentUserId !== null && activity?.host?.id === currentUserId
+  const alreadyJoined =
+    !isHost &&
+    currentUserId !== null &&
+    (activity?.participants.some((p) => p.id === currentUserId) ?? false)
+  const genderMismatch =
+    !isHost &&
+    !alreadyJoined &&
+    activity?.gender != null &&
+    activity.gender !== 'ALL' &&
+    userGender !== null &&
+    userGender !== activity.gender
+  const showJoinButton =
+    !isHost &&
+    !alreadyJoined &&
+    !chatLink &&
+    !genderMismatch &&
+    source !== 'my-events' &&
+    activity?.status === 'OPEN' &&
+    spotsLeft > 0 &&
+    (activity?.deadline == null || new Date() <= new Date(activity.deadline))
+  const resolvedChatLink = chatLink ?? (alreadyJoined ? (activity?.chatLink ?? null) : null)
+
+  const fillPercent =
+    activity && activity.maxSlots > 0
+      ? Math.min(100, Math.round((activity.currentParticipants / activity.maxSlots) * 100))
+      : 0
 
   return (
     <div className="activity-detail-page">
@@ -96,19 +143,13 @@ export default function ActivityDetailPage({
       <div className="auth-orb auth-orb-two" aria-hidden />
 
       <div className="activity-detail-frame">
-        <AppNav active={source === "my-events" ? "profile" : "activities"} />
+        <AppNav active={source === 'my-events' ? 'profile' : 'activities'} />
 
-        <button
-          type="button"
-          className="activity-detail-back"
-          onClick={handleBack}
-        >
+        <button type="button" className="activity-detail-back" onClick={handleBack}>
           ← Quay lại
         </button>
 
-        {loading && (
-          <div className="activity-detail-status">Đang tải chi tiết…</div>
-        )}
+        {loading && <div className="activity-detail-status">Đang tải chi tiết…</div>}
 
         {error && !loading && (
           <div className="activity-detail-error" role="alert">
@@ -117,140 +158,228 @@ export default function ActivityDetailPage({
         )}
 
         {!loading && !error && activity && categoryStyle && (
-          <article className="activity-detail-card myprofile-card">
-            <div className="activity-detail-hero">
-              <span
-                className="activity-detail-category"
-                style={{
-                  background: categoryStyle.bg,
-                  color: categoryStyle.color,
-                }}
-              >
-                {activity.categoryName}
-              </span>
-              <h1>{activity.title}</h1>
-            </div>
-
-            <DetailSection title="Thông tin cơ bản">
-              <dl className="activity-detail-facts">
-                <div>
-                  <dt>Địa điểm</dt>
-                  <dd>{activity.location}</dd>
-                </div>
-                <div>
-                  <dt>Người tổ chức</dt>
-                  <dd className="activity-detail-host-row">
-                    {activity.host ? (
-                      <button
-                        type="button"
-                        className="activity-detail-host-link"
-                        onClick={() => navigate(`/users/${activity.host!.id}`)}
-                      >
-                        {activity.host.avatarUrl ? (
-                          <img
-                            src={activity.host.avatarUrl}
-                            alt=""
-                            className="activity-detail-host-avatar"
-                          />
-                        ) : (
-                          <span
-                            className="activity-detail-host-avatar activity-detail-host-avatar-fallback"
-                            aria-hidden
-                          >
-                            {hostInitial(hostDisplayName)}
-                          </span>
-                        )}
-                        <span>{hostDisplayName}</span>
-                      </button>
-                    ) : (
-                      <span className="activity-detail-host-row-fallback">
-                        {hostDisplayName}
-                      </span>
-                    )}
-                  </dd>
-                </div>
-              </dl>
-            </DetailSection>
-
-            <DetailSection title="Thời gian">
-              <p className="activity-detail-text">
-                {formatActivityTimeRange(activity.startTime, activity.endTime)}
-              </p>
-            </DetailSection>
-
-            <DetailSection title="Hạn đăng ký">
-              <p className="activity-detail-text">
-                {formatActivityDateTime(activity.deadline)}
-              </p>
-            </DetailSection>
-
-            <DetailSection title="Yêu cầu về giới tính">
-              <p className="activity-detail-text">
-                {formatActivityGender(activity.gender)}
-              </p>
-            </DetailSection>
-
-            <DetailSection title="Mục đích">
-              <p className="activity-detail-text">
-                {activity.purpose?.trim() || "—"}
-              </p>
-            </DetailSection>
-
-            <DetailSection title="Người tham gia">
-              <p className="activity-detail-participant-count">
-                <strong>
-                  {activity.currentParticipants}/{activity.maxSlots}
-                </strong>{" "}
-                người đã tham gia
-              </p>
-
-              {activity.participants.length === 0 ? (
-                <p className="activity-detail-muted">Chưa có ai tham gia.</p>
-              ) : (
-                <ul className="activity-detail-participants">
-                  {activity.participants.map((participant) => (
-                    <li key={participant.id}>
-                      <button
-                        type="button"
-                        className="activity-detail-participant-link"
-                        onClick={() => navigate(`/users/${participant.id}`)}
-                      >
-                        <span className="activity-detail-participant-name">
-                          {participant.name}
-                        </span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </DetailSection>
-
-            {activity.description?.trim() && (
-              <DetailSection title="Mô tả chi tiết">
-                <p className="activity-detail-text activity-detail-description">
-                  {activity.description.trim()}
-                </p>
-              </DetailSection>
-            )}
-
-            {showJoinButton && (
-              <div className="activity-detail-actions">
-                <button
-                  type="button"
-                  className="activity-detail-join-btn"
-                  disabled
-                  title="Chức năng tham gia hoạt động sẽ được bổ sung ở task tiếp theo"
+          <div className="activity-detail-layout">
+            {/* Nội dung chính */}
+            <article className="activity-detail-main myprofile-card">
+              {/* Hero */}
+              <div className="activity-detail-hero">
+                <span
+                  className="activity-detail-category"
+                  style={{ background: categoryStyle.bg, color: categoryStyle.color }}
                 >
-                  Tham gia
-                </button>
-                <p className="activity-detail-muted activity-detail-join-hint">
-                  Chức năng tham gia sẽ được bổ sung ở task tiếp theo.
-                </p>
+                  {activity.categoryName}
+                </span>
+                <h1>{activity.title}</h1>
               </div>
-            )}
-          </article>
+
+              {/* Info grid */}
+              <div className="adp-info-grid">
+                <div className="adp-info-card">
+                  <span className="adp-info-icon adp-icon-orange">📅</span>
+                  <div>
+                    <p className="adp-info-label">Ngày diễn ra</p>
+                    <p className="adp-info-value">{formatDateOnly(activity.startTime)}</p>
+                  </div>
+                </div>
+                <div className="adp-info-card">
+                  <span className="adp-info-icon adp-icon-orange">🕐</span>
+                  <div>
+                    <p className="adp-info-label">Thời gian</p>
+                    <p className="adp-info-value">{formatTimeRange(activity.startTime, activity.endTime)}</p>
+                  </div>
+                </div>
+                <div className="adp-info-card">
+                  <span className="adp-info-icon adp-icon-pink">📍</span>
+                  <div>
+                    <p className="adp-info-label">Địa điểm</p>
+                    <p className="adp-info-value">{activity.location}</p>
+                  </div>
+                </div>
+                <div className="adp-info-card">
+                  <span className="adp-info-icon adp-icon-pink">👥</span>
+                  <div>
+                    <p className="adp-info-label">Số chỗ còn lại</p>
+                    <p className="adp-info-value">
+                      {spotsLeft > 0 ? `${spotsLeft} chỗ còn trống` : 'Đã đủ người'}
+                    </p>
+                  </div>
+                </div>
+                <div className="adp-info-card">
+                  <span className="adp-info-icon adp-icon-amber">🎯</span>
+                  <div>
+                    <p className="adp-info-label">Mục đích</p>
+                    <p className="adp-info-value">{activity.purpose?.trim() || '—'}</p>
+                  </div>
+                </div>
+                <div className="adp-info-card">
+                  <span className="adp-info-icon adp-icon-red">⏰</span>
+                  <div>
+                    <p className="adp-info-label">Hạn chốt đăng ký</p>
+                    <p className="adp-info-value">{formatActivityDateTime(activity.deadline)}</p>
+                  </div>
+                </div>
+                <div className="adp-info-card">
+                  <span className="adp-info-icon adp-icon-green">⚧</span>
+                  <div>
+                    <p className="adp-info-label">Yêu cầu giới tính</p>
+                    <p className="adp-info-value">{formatActivityGender(activity.gender)}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Mô tả */}
+              {activity.description?.trim() && (
+                <div className="adp-desc-card">
+                  <h3>Giới thiệu hoạt động</h3>
+                  <p>{activity.description.trim()}</p>
+                </div>
+              )}
+
+              {/* Người tham gia */}
+              <div className="adp-participants-section">
+                <div className="adp-participants-header">
+                  <span>{activity.currentParticipants} người đã tham gia</span>
+                  <span>tối đa {activity.maxSlots}</span>
+                </div>
+                <div className="adp-progress">
+                  <div className="adp-progress-fill" style={{ width: `${fillPercent}%` }} />
+                </div>
+
+                {activity.participants.length > 0 && (
+                  <>
+                    <div className="adp-participants-title-row">
+                      <h3>Người tham gia</h3>
+                      <span>{activity.currentParticipants}/{activity.maxSlots} chỗ</span>
+                    </div>
+                    <ul className="adp-participants-list">
+                      {activity.participants.map((p) => (
+                        <li key={p.id} className="adp-participant-card">
+                          <span className="adp-participant-avatar">
+                            {participantInitial(p.name)}
+                          </span>
+                          <span className="adp-participant-name">{p.name}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+
+                {activity.participants.length === 0 && (
+                  <p className="activity-detail-muted">Chưa có ai tham gia.</p>
+                )}
+              </div>
+            </article>
+
+            {/* Sidebar */}
+            <aside className="activity-detail-sidebar">
+              {/* Host view */}
+              {isHost && (
+                <div className="activity-detail-sidebar-card">
+                  <div className="adp-host-own-badge">
+                    <span>🏠</span>
+                    <p>Hoạt động của bạn</p>
+                  </div>
+                  <span className={`adp-status-pill adp-status-${(activity.status ?? 'OPEN').toLowerCase()}`}>
+                    {
+                      {
+                        OPEN: 'Đang mở đăng ký',
+                        FULL: 'Đã đủ người',
+                        CLOSED: 'Đã đóng',
+                        CANCELLED: 'Đã hủy',
+                        FINISHED: 'Đã kết thúc',
+                      }[activity.status ?? 'OPEN']
+                    }
+                  </span>
+                  {activity.chatLink && (
+                    <>
+                      <a
+                        href={activity.chatLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="activity-detail-chat-link"
+                      >
+                        Nhóm chat
+                      </a>
+                      <p className="activity-detail-chat-url">{activity.chatLink}</p>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Đã tham gia */}
+              {(alreadyJoined || chatLink) && (
+                <div className="activity-detail-sidebar-card">
+                  <p className="activity-detail-joined-label">Bạn đã tham gia</p>
+                  {resolvedChatLink && (
+                    <>
+                      <a
+                        href={resolvedChatLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="activity-detail-chat-link"
+                      >
+                        Vào nhóm chat
+                      </a>
+                      <p className="activity-detail-chat-url">{resolvedChatLink}</p>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Không đủ điều kiện giới tính */}
+              {genderMismatch && source !== 'my-events' && (
+                <div className="activity-detail-sidebar-card adp-gender-block">
+                  <span className="adp-gender-block-icon">🚫</span>
+                  <p>
+                    Hoạt động này chỉ dành cho{' '}
+                    <strong>{activity.gender === 'MALE' ? 'nam' : 'nữ'}</strong>
+                  </p>
+                </div>
+              )}
+
+              {/* Nút tham gia */}
+              {showJoinButton && (
+                <div className="activity-detail-sidebar-card">
+                  <button
+                    type="button"
+                    className="activity-detail-join-btn"
+                    onClick={handleJoin}
+                    disabled={joining}
+                  >
+                    {joining ? 'Đang xử lý…' : 'Tham gia'}
+                  </button>
+                  {joinError && (
+                    <p className="activity-detail-join-error" role="alert">
+                      {joinError}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <div className="activity-detail-sidebar-card">
+                <h2 className="activity-detail-sidebar-label">Người tổ chức</h2>
+                <div className="activity-detail-host-row">
+                  {activity.host?.avatarUrl ? (
+                    <img
+                      src={activity.host.avatarUrl}
+                      alt=""
+                      className="activity-detail-host-avatar"
+                    />
+                  ) : (
+                    <span
+                      className="activity-detail-host-avatar activity-detail-host-avatar-fallback"
+                      aria-hidden
+                    >
+                      {hostDisplayName.trim().charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                  <span className="activity-detail-host-name">{hostDisplayName}</span>
+                </div>
+              </div>
+            </aside>
+          </div>
         )}
       </div>
     </div>
-  );
+  )
 }

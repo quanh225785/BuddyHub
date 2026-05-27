@@ -164,6 +164,7 @@ export function CreateActivityScreen({
               aria-invalid={Boolean(errors.maxSlots)}
             />
             {errors.maxSlots && <small className="field-error">{errors.maxSlots}</small>}
+            <small className="field-hint">Không tính bạn (người tổ chức)</small>
           </label>
 
           <label className="field">

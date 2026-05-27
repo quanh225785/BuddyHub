@@ -1,4 +1,3 @@
-import type { MouseEvent } from 'react'
 import { getCategoryStyle } from '../../lib/categoryStyle'
 import { formatActivityDateShort, formatActivityTimeOnly } from '../../lib/formatActivity'
 import { navigate } from '../../lib/navigation'
@@ -22,11 +21,6 @@ export function ActivityBrowseCard({ activity }: ActivityBrowseCardProps) {
   const hostName = activity.host?.name ?? 'BuddyHub member'
 
   const goDetail = () => navigate(`/activities/${activity.id}`)
-
-  const handleJoin = (event: MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation()
-    window.alert('Chức năng tham gia hoạt động sẽ được bổ sung ở task tiếp theo.')
-  }
 
   return (
     <article className="activity-browse-card">
@@ -68,11 +62,8 @@ export function ActivityBrowseCard({ activity }: ActivityBrowseCardProps) {
       <p className="activity-browse-summary">{summary}</p>
 
       <div className="activity-browse-actions">
-        <button type="button" className="activity-browse-btn activity-browse-btn-secondary" onClick={goDetail}>
+        <button type="button" className="activity-browse-btn activity-browse-btn-primary" onClick={goDetail}>
           Xem chi tiết
-        </button>
-        <button type="button" className="activity-browse-btn activity-browse-btn-primary" onClick={handleJoin}>
-          Tham gia
         </button>
       </div>
     </article>

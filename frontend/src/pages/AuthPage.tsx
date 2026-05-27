@@ -7,6 +7,7 @@ import {
   sendOtp,
   updateProfile,
   verifyOtp,
+  type ProfilePayload,
 } from '../api'
 import { getApiErrorMessage } from '../lib/errors'
 import '../App.css'
@@ -658,7 +659,7 @@ export default function AuthPage() {
         safeInterests = profileForm.interests.filter((it) => interestOptions.includes(it))
       }
 
-      const safePayload: Record<string, unknown> = { name: safeName }
+      const safePayload: ProfilePayload = { name: safeName }
       if (safeFaculty !== null) safePayload.faculty = safeFaculty
       if (safeSchoolYear !== null) safePayload.schoolYear = safeSchoolYear
       safePayload.bio = safeBio

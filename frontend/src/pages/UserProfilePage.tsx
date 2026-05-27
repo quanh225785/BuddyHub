@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { getPublicProfile } from "../api";
 import { AppNav } from "../components/layout/AppNav";
-import { navigate } from "../lib/navigation";
 import "./ProfilePage.css";
 
 type PublicProfileResponse = {

@@ -35,6 +35,11 @@ export function AppNav({ active }: AppNavProps) {
       </nav>
 
       <div className="app-nav-actions">
+        {token && (
+          <button type="button" className="app-nav-create" onClick={() => navigate('/activities/new')}>
+            + Tạo hoạt động
+          </button>
+        )}
         {token ? (
           <button type="button" className="app-nav-cta app-nav-cta-muted" onClick={() => navigate('/me')}>
             Tài khoản

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchActivity, getMe, joinActivity } from '../api'
+import { ButtonSpinner, LoadingState } from '../components/common/LoadingState'
 import { AppNav } from '../components/layout/AppNav'
 import { getApiErrorMessage } from '../lib/errors'
 import { formatActivityDateTime, formatActivityGender } from '../lib/formatActivity'
@@ -147,13 +148,13 @@ export default function ActivityDetailPage({ activityId }: ActivityDetailPagePro
       <div className="auth-orb auth-orb-two" aria-hidden />
 
       <div className="activity-detail-frame">
-        <AppNav active={source === 'my-events' ? 'profile' : 'activities'} />
+        <AppNav active={source === 'my-events' ? 'my-events' : 'activities'} />
 
         <button type="button" className="activity-detail-back" onClick={handleBack}>
           ← Quay lại
         </button>
 
-        {loading && <div className="activity-detail-status">Đang tải chi tiết…</div>}
+        {loading && <LoadingState className="activity-detail-status" label="Đang tải chi tiết hoạt động..." />}
 
         {error && !loading && (
           <div className="activity-detail-error" role="alert">
@@ -363,7 +364,7 @@ export default function ActivityDetailPage({ activityId }: ActivityDetailPagePro
                     onClick={handleJoin}
                     disabled={joining}
                   >
-                    {joining ? 'Đang xử lý…' : 'Tham gia'}
+                    {joining ? <ButtonSpinner label="Đang xử lý..." /> : 'Tham gia'}
                   </button>
                   {joinError && (
                     <p className="activity-detail-join-error" role="alert">

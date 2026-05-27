@@ -3,7 +3,7 @@ import { createActivity } from '../api'
 import { CreateActivityScreen } from '../components/activities/CreateActivityScreen'
 import { AppNav } from '../components/layout/AppNav'
 import { getApiErrorMessage } from '../lib/errors'
-import { isAccessTokenValid, registerPath } from '../lib/auth'
+import { isAccessTokenValid, loginPath } from '../lib/auth'
 import { navigate } from '../lib/navigation'
 import { hasValidCategory, validateCreateActivityForm } from '../lib/validateActivity'
 import type { Banner, CreateActivityForm, FieldErrors } from '../types/activity'
@@ -35,7 +35,7 @@ export default function CreateActivityPage() {
 
   useEffect(() => {
     if (!isAccessTokenValid()) {
-      navigate(registerPath)
+      navigate(loginPath)
     }
   }, [])
 
@@ -126,7 +126,7 @@ export default function CreateActivityPage() {
       <div className="auth-orb auth-orb-two" aria-hidden />
 
       <div className="create-activity-frame">
-        <AppNav active="profile" />
+        <AppNav />
 
         <div className="create-hero-card">
           <div className="create-hero-icon" aria-hidden>

@@ -1,7 +1,7 @@
 .activity-browse-page {
   position: relative;
   min-height: 100svh;
-  padding: 20px 20px 48px;
+  padding: 0 var(--app-page-x) 56px;
   overflow: hidden;
   font-family: var(--sans);
   color: #2f3138;
@@ -11,7 +11,7 @@
 .activity-browse-shell {
   position: relative;
   z-index: 1;
-  max-width: 1180px;
+  max-width: var(--app-shell-max);
   margin: 0 auto;
   display: grid;
   gap: 22px;
@@ -260,7 +260,7 @@
 .activity-browse-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
+  gap: 22px;
 }
 
 .activity-browse-card {
@@ -412,9 +412,15 @@
   }
 }
 
+@media (min-width: 1280px) {
+  .activity-browse-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 640px) {
   .activity-browse-page {
-    padding: 14px 12px 32px;
+    padding: 0 12px 32px;
   }
 
   .activity-browse-intro {

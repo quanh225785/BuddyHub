@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ButtonSpinner } from '../common/LoadingState'
 import type { Banner, FieldErrors, LoginForm } from '../../types/auth'
 import { EyeIcon, EyeOffIcon, MailIcon } from './icons'
 
@@ -30,8 +31,8 @@ export function LoginScreen({
       </div>
 
       <div className="card-title-block">
-        <h1>Đăng nhập</h1>
-        <p>Nhập email HUST và mật khẩu để tiếp tục.</p>
+        <h1>ÄÄƒng nháº­p</h1>
+        <p>Nháº­p email HUST vÃ  máº­t kháº©u Ä‘á»ƒ tiáº¿p tá»¥c.</p>
       </div>
 
       {banner && (
@@ -54,13 +55,13 @@ export function LoginScreen({
         </label>
 
         <label className="field">
-          <span>Mật khẩu</span>
+          <span>Máº­t kháº©u</span>
           <div className="password-row">
             <input
               type={showPassword ? 'text' : 'password'}
               value={form.password}
               onChange={(event) => onChange('password', event.target.value)}
-              placeholder="Nhập mật khẩu"
+              placeholder="Nháº­p máº­t kháº©u"
               aria-invalid={Boolean(errors.password)}
             />
             <button
@@ -68,7 +69,7 @@ export function LoginScreen({
               className="password-toggle"
               aria-pressed={showPassword}
               onClick={() => setShowPassword((value) => !value)}
-              aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+              aria-label={showPassword ? 'áº¨n máº­t kháº©u' : 'Hiá»‡n máº­t kháº©u'}
             >
               {showPassword ? <EyeOffIcon className="eye-icon" /> : <EyeIcon className="eye-icon" />}
             </button>
@@ -77,16 +78,17 @@ export function LoginScreen({
         </label>
 
         <button className="primary-button" type="submit" disabled={loading}>
-          {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+          {loading ? <ButtonSpinner label="Đang đăng nhập..." /> : 'ÄÄƒng nháº­p'}
         </button>
 
         <p className="auth-switch">
-          <span>Chưa có tài khoản? </span>
+          <span>ChÆ°a cÃ³ tÃ i khoáº£n? </span>
           <button className="text-link-button" type="button" onClick={onGoRegister}>
-            Đăng ký ngay
+            ÄÄƒng kÃ½ ngay
           </button>
         </p>
       </form>
     </>
   )
 }
+

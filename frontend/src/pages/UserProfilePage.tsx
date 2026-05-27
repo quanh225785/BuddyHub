@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { getPublicProfile } from "../api";
+import { LoadingState } from "../components/common/LoadingState";
 import { AppNav } from "../components/layout/AppNav";
 import { navigate } from "../lib/navigation";
 import "./ProfilePage.css";
@@ -22,8 +23,8 @@ type PublicProfileResponse = {
 
 function formatGender(value?: "MALE" | "FEMALE" | "ALL" | null) {
   if (value === "MALE") return "Nam";
-  if (value === "FEMALE") return "Nữ";
-  return "Chưa cập nhật";
+  if (value === "FEMALE") return "Ná»¯";
+  return "ChÆ°a cáº­p nháº­t";
 }
 
 function makeHandle(name: string) {
@@ -55,7 +56,7 @@ export default function UserProfilePage({ userId }: { userId: string }) {
         setError(
           e?.response?.data?.message ||
             e?.message ||
-            "Lỗi khi tải hồ sơ người dùng",
+            "Lá»—i khi táº£i há»“ sÆ¡ ngÆ°á»i dÃ¹ng",
         );
       } finally {
         if (alive) setLoading(false);
@@ -71,8 +72,8 @@ export default function UserProfilePage({ userId }: { userId: string }) {
   if (loading) {
     return (
       <main className="myprofile-shell public-profile-shell">
-        <AppNav active="profile" />
-        <div className="public-profile-state">Đang tải hồ sơ...</div>
+        <AppNav />
+        <LoadingState className="public-profile-state" label="Đang tải hồ sơ..." />
       </main>
     );
   }
@@ -80,11 +81,11 @@ export default function UserProfilePage({ userId }: { userId: string }) {
   if (error) {
     return (
       <main className="myprofile-shell public-profile-shell">
-        <AppNav active="profile" />
+        <AppNav />
         <button type="button" className="profile-back" onClick={() => window.history.back()}>
-          ← Quay lại
+          â† Quay láº¡i
         </button>
-        <div className="public-profile-state public-profile-state-error">Lỗi: {error}</div>
+        <div className="public-profile-state public-profile-state-error">Lá»—i: {error}</div>
       </main>
     );
   }
@@ -92,7 +93,7 @@ export default function UserProfilePage({ userId }: { userId: string }) {
   if (!data) {
     return (
       <main className="myprofile-shell public-profile-shell">
-        <AppNav active="profile" />
+        <AppNav />
         <div className="public-profile-state">Không có hồ sơ</div>
       </main>
     );
@@ -105,10 +106,10 @@ export default function UserProfilePage({ userId }: { userId: string }) {
 
   return (
     <main className="myprofile-shell public-profile-shell">
-      <AppNav active="profile" />
+      <AppNav />
 
       <button type="button" className="profile-back" onClick={() => window.history.back()}>
-        ← Quay lại
+        â† Quay láº¡i
       </button>
 
       <section className="myprofile-card public-profile-card">
@@ -132,38 +133,38 @@ export default function UserProfilePage({ userId }: { userId: string }) {
 
             <div className="public-profile-sub">
               {profile.isVerified && <span className="badge">HUST Verified</span>}
-              <span className="public-profile-visibility">Hồ sơ công khai</span>
+              <span className="public-profile-visibility">Há»“ sÆ¡ cÃ´ng khai</span>
             </div>
 
             <div className="meta-line">
-              {profile.faculty || "Chưa cập nhật khoa / viện"}
-              {profile.schoolYear ? ` · Năm ${profile.schoolYear}` : ""}
+              {profile.faculty || "ChÆ°a cáº­p nháº­t khoa / viá»‡n"}
+              {profile.schoolYear ? ` Â· NÄƒm ${profile.schoolYear}` : ""}
             </div>
-            <div className="meta-line">Giới tính: {genderLabel}</div>
+            <div className="meta-line">Giá»›i tÃ­nh: {genderLabel}</div>
           </div>
         </div>
 
-        <p className="public-profile-bio">{profile.bio || "Chưa có phần giới thiệu."}</p>
+        <p className="public-profile-bio">{profile.bio || "ChÆ°a cÃ³ pháº§n giá»›i thiá»‡u."}</p>
 
         <div className="counts">
           <div className="count">
             <strong>{profile.hostedCount}</strong>
-            <span>Đã tổ chức</span>
+            <span>ÄÃ£ tá»• chá»©c</span>
           </div>
           <div className="count">
             <strong>{profile.joinedCount}</strong>
-            <span>Đã tham gia</span>
+            <span>ÄÃ£ tham gia</span>
           </div>
         </div>
 
         <div className="public-profile-content-grid">
           <div className="interests public-profile-section">
             <div className="section-head">
-              <h3>Sở thích</h3>
+              <h3>Sá»Ÿ thÃ­ch</h3>
             </div>
             <div className="chips">
               {profile.interests.length === 0 ? (
-                <span className="muted">Chưa cập nhật</span>
+                <span className="muted">ChÆ°a cáº­p nháº­t</span>
               ) : (
                 profile.interests.map((interest) => (
                   <span key={interest} className="chip">
@@ -175,18 +176,18 @@ export default function UserProfilePage({ userId }: { userId: string }) {
           </div>
 
           <div className="public-profile-section public-profile-info">
-            <h3>Thông tin</h3>
+            <h3>ThÃ´ng tin</h3>
             <div className="public-profile-info-list">
               <div>
-                <span>Khoa / Viện</span>
-                <strong>{profile.faculty || "Chưa cập nhật"}</strong>
+                <span>Khoa / Viá»‡n</span>
+                <strong>{profile.faculty || "ChÆ°a cáº­p nháº­t"}</strong>
               </div>
               <div>
-                <span>Năm học</span>
-                <strong>{profile.schoolYear ? `Năm ${profile.schoolYear}` : "Chưa cập nhật"}</strong>
+                <span>NÄƒm há»c</span>
+                <strong>{profile.schoolYear ? `NÄƒm ${profile.schoolYear}` : "ChÆ°a cáº­p nháº­t"}</strong>
               </div>
               <div>
-                <span>Giới tính</span>
+                <span>Giá»›i tÃ­nh</span>
                 <strong>{genderLabel}</strong>
               </div>
             </div>
@@ -195,13 +196,15 @@ export default function UserProfilePage({ userId }: { userId: string }) {
 
         <div className="public-profile-actions">
           <button type="button" className="cancel-button" onClick={() => window.history.back()}>
-            Quay lại hoạt động
+            Quay láº¡i hoáº¡t Ä‘á»™ng
           </button>
           <button type="button" className="save-button" onClick={() => navigate("/activities")}>
-            Khám phá hoạt động
+            KhÃ¡m phÃ¡ hoáº¡t Ä‘á»™ng
           </button>
         </div>
       </section>
     </main>
   );
 }
+
+

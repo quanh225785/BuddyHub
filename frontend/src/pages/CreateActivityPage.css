@@ -1,7 +1,7 @@
 .create-activity-page {
   position: relative;
   min-height: 100svh;
-  padding: 24px 20px 48px;
+  padding: 0 var(--app-page-x) 56px;
   overflow: hidden;
   font-family: var(--sans);
   color: #2f3138;
@@ -19,7 +19,8 @@
 .create-activity-frame {
   position: relative;
   z-index: 1;
-  width: min(100%, 860px);
+  width: 100%;
+  max-width: var(--app-shell-max);
   margin: 0 auto;
   display: grid;
   gap: 20px;
@@ -98,7 +99,7 @@
   color: #7f7786;
   font-size: 0.94rem;
   line-height: 1.55;
-  max-width: 58ch;
+  max-width: 86ch;
 }
 
 .create-form-card {
@@ -347,7 +348,7 @@
 
 @media (max-width: 768px) {
   .create-activity-page {
-    padding: 16px 14px 32px;
+    padding: 0 14px 32px;
   }
 
   .create-topbar {

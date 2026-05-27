@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { Banner, FieldErrors, CompleteProfileForm } from '../../types/auth'
+import { ButtonSpinner, LoadingState } from '../common/LoadingState'
 import { UserIcon, EyeIcon, EyeOffIcon } from './icons'
 import { StepIndicator } from './StepIndicator'
 
@@ -40,8 +41,8 @@ export function ProfileScreen({
       </div>
 
       <div className="card-title-block">
-        <h1>Hoàn tất hồ sơ</h1>
-        <p>Bước 3: Điền thông tin cá nhân để hoàn tất đăng ký</p>
+        <h1>HoÃ n táº¥t há»“ sÆ¡</h1>
+        <p>BÆ°á»›c 3: Äiá»n thÃ´ng tin cÃ¡ nhÃ¢n Ä‘á»ƒ hoÃ n táº¥t Ä‘Äƒng kÃ½</p>
       </div>
 
       <div className="session-card">
@@ -53,17 +54,17 @@ export function ProfileScreen({
       {banner?.tone === 'success' && <div className="banner banner-success">{banner.text}</div>}
 
       <form className="auth-form" onSubmit={onSubmit} noValidate>
-        {/* Thông tin xác thực */}
+        {/* ThÃ´ng tin xÃ¡c thá»±c */}
         <fieldset>
-          <legend className="fieldset-legend">Thông tin xác thực</legend>
+          <legend className="fieldset-legend">ThÃ´ng tin xÃ¡c thá»±c</legend>
 
           <label className="field">
-            <span>Họ và tên</span>
+            <span>Há» vÃ  tÃªn</span>
             <input
               type="text"
               value={form.name}
               disabled
-              placeholder="Tên sinh viên"
+              placeholder="TÃªn sinh viÃªn"
               className="field-disabled"
               aria-invalid={Boolean(errors.name)}
             />
@@ -71,20 +72,20 @@ export function ProfileScreen({
           </label>
 
           <label className="field">
-            <span>Mật khẩu</span>
+            <span>Máº­t kháº©u</span>
             <div className="password-row">
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={form.password}
                 onChange={(event) => onChange('password', event.target.value)}
-                placeholder="Tối thiểu 8 ký tự, có chữ hoa và chữ số"
+                placeholder="Tá»‘i thiá»ƒu 8 kÃ½ tá»±, cÃ³ chá»¯ hoa vÃ  chá»¯ sá»‘"
                 aria-invalid={Boolean(errors.password)}
               />
               <button
                 type="button"
                 className="password-toggle"
                 aria-pressed={showPassword}
-                aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                aria-label={showPassword ? 'áº¨n máº­t kháº©u' : 'Hiá»‡n máº­t kháº©u'}
                 onClick={() => setShowPassword((s) => !s)}
               >
                 {showPassword ? <EyeOffIcon className="eye-icon" /> : <EyeIcon className="eye-icon" />}
@@ -94,20 +95,20 @@ export function ProfileScreen({
           </label>
 
           <label className="field">
-            <span>Nhập lại mật khẩu</span>
+            <span>Nháº­p láº¡i máº­t kháº©u</span>
             <div className="password-row">
               <input
                 type={showConfirm ? 'text' : 'password'}
                 value={form.confirmPassword}
                 onChange={(event) => onChange('confirmPassword', event.target.value)}
-                placeholder="Nhập lại mật khẩu"
+                placeholder="Nháº­p láº¡i máº­t kháº©u"
                 aria-invalid={Boolean(errors.confirmPassword)}
               />
               <button
                 type="button"
                 className="password-toggle"
                 aria-pressed={showConfirm}
-                aria-label={showConfirm ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                aria-label={showConfirm ? 'áº¨n máº­t kháº©u' : 'Hiá»‡n máº­t kháº©u'}
                 onClick={() => setShowConfirm((s) => !s)}
               >
                 {showConfirm ? <EyeOffIcon className="eye-icon" /> : <EyeIcon className="eye-icon" />}
@@ -117,7 +118,7 @@ export function ProfileScreen({
           </label>
 
           <label className="field">
-            <span>Giới tính</span>
+            <span>Giá»›i tÃ­nh</span>
             <div className="choice-row choice-row-gender">
               <button
                 type="button"
@@ -131,49 +132,50 @@ export function ProfileScreen({
                 className={`choice-pill choice-pill-gender ${form.gender === 'female' ? 'is-selected' : ''}`}
                 onClick={() => onChange('gender', 'female')}
               >
-                Nữ
+                Ná»¯
               </button>
             </div>
             {errors.gender && <small className="field-error">{errors.gender}</small>}
           </label>
         </fieldset>
 
-        {/* Thông tin hồ sơ */}
+        {/* ThÃ´ng tin há»“ sÆ¡ */}
         <fieldset>
-          <legend className="fieldset-legend">Thông tin hồ sơ</legend>
+          <legend className="fieldset-legend">ThÃ´ng tin há»“ sÆ¡</legend>
 
           <label className="field">
-            <span>Khoa / Viện</span>
+            <span>Khoa / Viá»‡n</span>
             <input
               type="text"
               value={form.faculty}
               onChange={(event) => onChange('faculty', event.target.value)}
-              placeholder="Ví dụ: Công nghệ thông tin"
+              placeholder="VÃ­ dá»¥: CÃ´ng nghá»‡ thÃ´ng tin"
               aria-invalid={Boolean(errors.faculty)}
             />
             {errors.faculty && <small className="field-error">{errors.faculty}</small>}
           </label>
 
           <label className="field">
-            <span>Năm học</span>
+            <span>NÄƒm há»c</span>
             <select
               value={form.schoolYear}
               onChange={(event) => onChange('schoolYear', event.target.value)}
               aria-invalid={Boolean(errors.schoolYear)}
             >
-              <option value="">Chọn năm học</option>
-              <option value="1">Năm 1</option>
-              <option value="2">Năm 2</option>
-              <option value="3">Năm 3</option>
-              <option value="4">Năm 4</option>
-              <option value="5">Năm 5</option>
-              <option value="6">Cao học</option>
+              <option value="">Chá»n nÄƒm há»c</option>
+              <option value="1">NÄƒm 1</option>
+              <option value="2">NÄƒm 2</option>
+              <option value="3">NÄƒm 3</option>
+              <option value="4">NÄƒm 4</option>
+              <option value="5">NÄƒm 5</option>
+              <option value="6">Cao há»c</option>
             </select>
             {errors.schoolYear && <small className="field-error">{errors.schoolYear}</small>}
           </label>
 
           <div className="field">
-            <span>Sở thích</span>
+            <span>Sá»Ÿ thÃ­ch</span>
+            {interestLoading && <LoadingState className="field-loading-state" label="Đang tải sở thích..." />}
             {!interestLoading && interestOptions.length > 0 && (
               <div className="chip-grid">
                 {interestOptions.map((interest) => (
@@ -191,13 +193,13 @@ export function ProfileScreen({
           </div>
 
           <label className="field">
-            <span>Giới thiệu bản thân</span>
+            <span>Giá»›i thiá»‡u báº£n thÃ¢n</span>
             <textarea
               rows={4}
               maxLength={200}
               value={form.bio}
               onChange={(event) => onChange('bio', event.target.value)}
-              placeholder="Kể một chút về bản thân..."
+              placeholder="Ká»ƒ má»™t chÃºt vá» báº£n thÃ¢n..."
               aria-invalid={Boolean(errors.bio)}
             />
             <div className="field-footer">
@@ -208,9 +210,10 @@ export function ProfileScreen({
         </fieldset>
 
         <button className="primary-button" type="submit" disabled={loading}>
-          {loading ? 'Đang hoàn tất đăng ký...' : 'Hoàn tất đăng ký'}
+          {loading ? <ButtonSpinner label="Đang hoàn tất..." /> : 'HoÃ n táº¥t Ä‘Äƒng kÃ½'}
         </button>
       </form>
     </>
   )
 }
+

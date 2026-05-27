@@ -1,4 +1,5 @@
 ﻿import { useEffect, useState } from "react";
+import { getDashboard } from "./api";
 import AuthPage from "./pages/AuthPage";
 import ActivityDetailPage from "./pages/ActivityDetailPage";
 import ActivityListPage from "./pages/ActivityListPage";
@@ -6,7 +7,16 @@ import CreateActivityPage from "./pages/CreateActivityPage";
 import MyEventsPage from "./pages/MyEventsPage";
 import ProfilePage from "./pages/ProfilePage";
 import UserProfilePage from "./pages/UserProfilePage";
-import { clearExpiredAccessToken, homePath, isAccessTokenValid, registerPath } from "./lib/auth";
+import {
+  clearAccessToken,
+  clearExpiredAccessToken,
+  homePath,
+  isAccessTokenValid,
+  loginPath,
+  setAuthRedirectMessage,
+} from "./lib/auth";
+
+const protectedRouteMessage = "Bạn phải đăng nhập để xem các trang này.";
 
 function getActivityDetailId(pathname: string) {
   const match = pathname.match(/^\/activities\/([^/]+)$/);
@@ -17,7 +27,39 @@ function getActivityDetailId(pathname: string) {
 }
 
 function isProtectedPath(pathname: string) {
-  return pathname === "/me" || pathname === "/my-events" || pathname === "/activities/new";
+  return (
+    pathname === "/me" ||
+    pathname === "/my-events" ||
+    pathname === "/activities" ||
+    pathname.startsWith("/activities/") ||
+    pathname.startsWith("/users/")
+  );
+}
+
+function ProtectedRouteRedirect() {
+  useEffect(() => {
+    setAuthRedirectMessage(protectedRouteMessage);
+
+    const timeoutId = window.setTimeout(() => {
+      window.history.replaceState(null, "", loginPath);
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    }, 900);
+
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
+  return (
+    <main className="auth-page protected-redirect-page">
+      <div className="auth-orb auth-orb-one" aria-hidden />
+      <div className="auth-orb auth-orb-two" aria-hidden />
+
+      <section className="protected-redirect-card" role="status" aria-live="polite">
+        <div className="loading-spinner" aria-hidden />
+        <h1>{protectedRouteMessage}</h1>
+        <p>Đang chuyển bạn tới trang đăng nhập...</p>
+      </section>
+    </main>
+  );
 }
 
 function App() {
@@ -35,7 +77,9 @@ function App() {
     const onPop = () => {
       try {
         setPathname(window.location.pathname);
-      } catch {}
+      } catch {
+        return;
+      }
     };
 
     window.addEventListener("popstate", onPop);
@@ -45,24 +89,35 @@ function App() {
   useEffect(() => {
     clearExpiredAccessToken();
 
-    if (isProtectedPath(pathname) && !isAccessTokenValid()) {
-      window.history.replaceState(null, "", registerPath);
-      setPathname(registerPath);
+    if (!(pathname === "/" || pathname.startsWith("/auth")) || !isAccessTokenValid()) {
       return;
     }
 
-    if ((pathname === "/" || pathname.startsWith("/auth")) && isAccessTokenValid()) {
-      window.history.replaceState(null, "", homePath);
-      setPathname(homePath);
-    }
+    let alive = true;
+
+    const validateAndRedirect = async () => {
+      try {
+        await getDashboard();
+        if (!alive) return;
+
+        window.history.replaceState(null, "", homePath);
+        window.dispatchEvent(new PopStateEvent("popstate"));
+      } catch {
+        if (!alive) return;
+
+        clearAccessToken();
+      }
+    };
+
+    void validateAndRedirect();
+
+    return () => {
+      alive = false;
+    };
   }, [pathname]);
 
   if (isProtectedPath(pathname) && !isAccessTokenValid()) {
-    return null;
-  }
-
-  if ((pathname === "/" || pathname.startsWith("/auth")) && isAccessTokenValid()) {
-    return null;
+    return <ProtectedRouteRedirect />;
   }
 
   if (pathname === "/me") {

@@ -1,10 +1,12 @@
 const accessTokenKey = 'access_token'
+const authRedirectMessageKey = 'auth_redirect_message'
 
 type JwtPayload = {
   exp?: number
 }
 
 export const homePath = '/me'
+export const loginPath = '/auth/login'
 export const registerPath = '/auth/register'
 
 function decodeJwtPayload(token: string): JwtPayload | null {
@@ -35,7 +37,9 @@ export function setAccessToken(token: string) {
 export function clearAccessToken() {
   try {
     localStorage.removeItem(accessTokenKey)
-  } catch {}
+  } catch {
+    return
+  }
 }
 
 export function isAccessTokenValid(token = getAccessToken()) {
@@ -50,5 +54,23 @@ export function isAccessTokenValid(token = getAccessToken()) {
 export function clearExpiredAccessToken() {
   if (!isAccessTokenValid()) {
     clearAccessToken()
+  }
+}
+
+export function setAuthRedirectMessage(message: string) {
+  try {
+    sessionStorage.setItem(authRedirectMessageKey, message)
+  } catch {
+    return
+  }
+}
+
+export function takeAuthRedirectMessage() {
+  try {
+    const message = sessionStorage.getItem(authRedirectMessageKey)
+    sessionStorage.removeItem(authRedirectMessageKey)
+    return message
+  } catch {
+    return null
   }
 }

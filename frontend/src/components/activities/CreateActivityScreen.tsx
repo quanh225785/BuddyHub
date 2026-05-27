@@ -1,4 +1,5 @@
 import { type FormEvent, useEffect, useRef, useState } from 'react'
+import { ButtonSpinner } from '../common/LoadingState'
 import { getNowDateTimeLocalMin, getTodayDateMin } from '../../lib/validateActivity'
 import { ACTIVITY_CATEGORIES, type ActivityCategory, type Banner, type CreateActivityForm, type FieldErrors } from '../../types/activity'
 
@@ -321,7 +322,7 @@ export function CreateActivityScreen({
           Hủy bỏ
         </button>
         <button type="submit" className="primary-button create-submit-button" disabled={loading}>
-          {loading ? 'Đang tạo...' : 'Tạo hoạt động'}
+          {loading ? <ButtonSpinner label="Đang tạo..." /> : 'Tạo hoạt động'}
         </button>
       </div>
     </form>

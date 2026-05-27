@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getDashboard, updateProfile, type ProfilePayload } from '../api'
+import { ButtonSpinner, LoadingState } from '../components/common/LoadingState'
 import { AppNav } from '../components/layout/AppNav'
+import { clearAccessToken, loginPath, setAuthRedirectMessage } from '../lib/auth'
 import { formatActivityTime } from '../lib/formatActivity'
 import { navigate } from '../lib/navigation'
 import type { DashboardResponse } from '../types/dashboard'
@@ -58,6 +60,13 @@ export default function ProfilePage() {
           interests: [...data.profile.interests],
         })
       } catch (e: any) {
+        const status = e?.response?.status
+        if (status === 400 || status === 401) {
+          clearAccessToken()
+          setAuthRedirectMessage('Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.')
+          navigate(loginPath)
+          return
+        }
         setError(e?.response?.data?.message || e?.message || 'Lỗi khi tải hồ sơ')
       } finally {
         setLoading(false)
@@ -147,7 +156,11 @@ export default function ProfilePage() {
   }
 
   if (loading) {
-    return <div className="myprofile-shell">Đang tải hồ sơ…</div>
+    return (
+      <div className="myprofile-shell">
+        <LoadingState label="Đang tải hồ sơ..." />
+      </div>
+    )
   }
 
   if (error) {
@@ -160,7 +173,7 @@ export default function ProfilePage() {
 
   return (
     <main className="myprofile-shell">
-      <AppNav active="profile" />
+      <AppNav />
 
       <section className="myprofile-card myprofile-hero">
         <div className="myprofile-cover" />
@@ -288,7 +301,7 @@ export default function ProfilePage() {
 
             <div className="edit-actions">
               <button type="button" className="save-button" onClick={saveProfile} disabled={saving}>
-                {saving ? 'Đang lưu…' : 'Lưu thay đổi'}
+                {saving ? <ButtonSpinner label="Đang lưu..." /> : 'Lưu thay đổi'}
               </button>
               <button type="button" className="cancel-button" onClick={cancelEditing} disabled={saving}>
                 Hủy

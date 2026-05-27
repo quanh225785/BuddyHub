@@ -1,6 +1,7 @@
 import { useDeferredValue, useEffect, useState } from 'react'
 import { fetchActivities } from '../api'
 import { ActivityBrowseCard } from '../components/activities/ActivityBrowseCard'
+import { LoadingState } from '../components/common/LoadingState'
 import { AppNav } from '../components/layout/AppNav'
 import { getApiErrorMessage } from '../lib/errors'
 import { navigate } from '../lib/navigation'
@@ -37,6 +38,7 @@ export default function ActivityListPage() {
   const deferredKeyword = useDeferredValue(keyword)
 
   const hasActiveFilters = Boolean(keyword.trim() || category || time)
+
   useEffect(() => {
     let alive = true
 
@@ -142,9 +144,7 @@ export default function ActivityListPage() {
         </section>
 
         <div className="activity-browse-toolbar">
-          <p className="activity-browse-count">
-            {loading ? 'Đang tìm hoạt động phù hợp…' : `${activities.length} hoạt động`}
-          </p>
+          <p className="activity-browse-count">{loading ? 'Đang tìm...' : `${activities.length} hoạt động`}</p>
           {hasActiveFilters && (
             <button
               type="button"
@@ -156,7 +156,7 @@ export default function ActivityListPage() {
           )}
         </div>
 
-        {loading && <div className="activity-browse-status">Đang tải danh sách…</div>}
+        {loading && <LoadingState className="activity-browse-status" label="Đang tải danh sách hoạt động..." />}
 
         {error && !loading && (
           <div className="activity-browse-error" role="alert">

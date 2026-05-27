@@ -8,6 +8,8 @@
   --sans: Inter, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --heading: Inter, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --mono: 'SFMono-Regular', Menlo, Consolas, monospace;
+  --app-shell-max: 1440px;
+  --app-page-x: clamp(20px, 4vw, 56px);
 
   font: 16px/1.5 var(--sans);
   letter-spacing: 0.01em;

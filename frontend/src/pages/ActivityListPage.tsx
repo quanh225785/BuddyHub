@@ -1,11 +1,12 @@
 import { useDeferredValue, useEffect, useState } from 'react'
-import { fetchActivities } from '../api'
+import { fetchActivities, fetchCategories, getDashboard } from '../api'
 import { ActivityBrowseCard } from '../components/activities/ActivityBrowseCard'
 import { AppNav } from '../components/layout/AppNav'
 import { getApiErrorMessage } from '../lib/errors'
 import { navigate } from '../lib/navigation'
-import { ACTIVITY_CATEGORIES } from '../types/activity'
+
 import type { ActivityListItem } from '../types/activity'
+import type { DashboardResponse } from '../types/dashboard'
 import '../App.css'
 import './ActivityListPage.css'
 
@@ -32,11 +33,38 @@ export default function ActivityListPage() {
   const [keyword, setKeyword] = useState('')
   const [category, setCategory] = useState('')
   const [time, setTime] = useState('')
+  const [matchMyInterests, setMatchMyInterests] = useState(false)
+  const [myInterests, setMyInterests] = useState<string[]>([])
+  const [myInterestsLoading, setMyInterestsLoading] = useState(false)
+  const [categories, setCategories] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const deferredKeyword = useDeferredValue(keyword)
 
-  const hasActiveFilters = Boolean(keyword.trim() || category || time)
+  const hasActiveFilters = Boolean(keyword.trim() || category || time || matchMyInterests)
+
+  useEffect(() => {
+    let alive = true
+    const load = async () => {
+      try {
+        const data = await fetchCategories()
+        const items = data?.categories
+        if (!alive || !Array.isArray(items)) return
+        setCategories(
+          items.filter(
+            (value: unknown): value is string => typeof value === 'string' && value.trim().length > 0,
+          ),
+        )
+      } catch {
+        if (alive) setCategories([])
+      }
+    }
+    void load()
+    return () => {
+      alive = false
+    }
+  }, [])
+
   useEffect(() => {
     let alive = true
 
@@ -44,11 +72,24 @@ export default function ActivityListPage() {
       try {
         setLoading(true)
         setError(null)
+
+        const categoryParam: string | string[] | undefined = matchMyInterests
+          ? myInterests.length > 0
+            ? myInterests
+            : ['__none__']
+          : category || undefined
+
         const params = {
           keyword: deferredKeyword.trim() || undefined,
-          category: category || undefined,
+          category: categoryParam,
           time: time || undefined,
         }
+
+        if (matchMyInterests && myInterests.length === 0 && !myInterestsLoading) {
+          setActivities([])
+          return
+        }
+
         const data = await fetchActivities(params)
         if (!alive) return
         setActivities(Array.isArray(data) ? data : [])
@@ -67,12 +108,33 @@ export default function ActivityListPage() {
     return () => {
       alive = false
     }
-  }, [category, deferredKeyword, time])
+  }, [category, deferredKeyword, time, matchMyInterests, myInterests, myInterestsLoading])
+
+  const toggleMatchMyInterests = async () => {
+    if (matchMyInterests) {
+      setMatchMyInterests(false)
+      return
+    }
+
+    setCategory('')
+    setMyInterestsLoading(true)
+    try {
+      const data = (await getDashboard()) as DashboardResponse
+      const interests = Array.isArray(data?.profile?.interests) ? data.profile.interests : []
+      setMyInterests(interests)
+      setMatchMyInterests(true)
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'Không thể tải sở thích cá nhân. Vui lòng đăng nhập lại.'))
+    } finally {
+      setMyInterestsLoading(false)
+    }
+  }
 
   const clearFilters = () => {
     setKeyword('')
     setCategory('')
     setTime('')
+    setMatchMyInterests(false)
   }
 
   return (
@@ -114,9 +176,16 @@ export default function ActivityListPage() {
               <label className="activity-browse-select">
                 <span className="activity-browse-field-label">Loại hoạt động</span>
                 <span className="activity-browse-select-shell">
-                  <select value={category} onChange={(event) => setCategory(event.target.value)}>
+                  <select
+                    value={category}
+                    onChange={(event) => {
+                      setCategory(event.target.value)
+                      if (event.target.value) setMatchMyInterests(false)
+                    }}
+                    disabled={matchMyInterests}
+                  >
                     <option value="">Tất cả loại</option>
-                    {ACTIVITY_CATEGORIES.map((item) => (
+                    {categories.map((item) => (
                       <option key={item} value={item}>
                         {item}
                       </option>
@@ -137,6 +206,31 @@ export default function ActivityListPage() {
                   </select>
                 </span>
               </label>
+            </div>
+
+            <div className="activity-browse-filter-group">
+              <button
+                type="button"
+                className={`activity-browse-match-button ${matchMyInterests ? 'is-active' : ''}`}
+                onClick={toggleMatchMyInterests}
+                disabled={myInterestsLoading}
+              >
+                {myInterestsLoading
+                  ? 'Đang tải sở thích…'
+                  : matchMyInterests
+                    ? 'Đang lọc theo sở thích của tôi · Bỏ lọc'
+                    : 'Lọc theo sở thích của tôi'}
+              </button>
+              {matchMyInterests && myInterests.length === 0 && !myInterestsLoading && (
+                <small className="activity-browse-match-hint">
+                  Bạn chưa chọn sở thích nào ở hồ sơ.
+                </small>
+              )}
+              {matchMyInterests && myInterests.length > 0 && (
+                <small className="activity-browse-match-hint">
+                  Khớp với loại hoạt động: {myInterests.join(', ')}
+                </small>
+              )}
             </div>
           </div>
         </section>

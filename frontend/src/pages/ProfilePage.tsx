@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getDashboard, updateProfile, type ProfilePayload } from '../api'
+import { fetchInterests, getDashboard, updateProfile, type ProfilePayload } from '../api'
 import { AppNav } from '../components/layout/AppNav'
 import { formatActivityTime } from '../lib/formatActivity'
 import { navigate } from '../lib/navigation'
@@ -37,6 +37,7 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState<ProfileDraft | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [interestOptions, setInterestOptions] = useState<string[]>([])
 
   useEffect(() => {
     let alive = true
@@ -64,6 +65,28 @@ export default function ProfilePage() {
       }
     }
 
+    void load()
+    return () => {
+      alive = false
+    }
+  }, [])
+
+  useEffect(() => {
+    let alive = true
+    const load = async () => {
+      try {
+        const data = await fetchInterests()
+        const interests = data?.interests
+        if (!alive || !Array.isArray(interests)) return
+        setInterestOptions(
+          interests.filter(
+            (value: unknown): value is string => typeof value === 'string' && value.trim().length > 0,
+          ),
+        )
+      } catch {
+        if (alive) setInterestOptions([])
+      }
+    }
     void load()
     return () => {
       alive = false
@@ -264,10 +287,10 @@ export default function ProfilePage() {
                 <h3>Sở thích</h3>
               </div>
               <div className="chips">
-                {dashboard.profile.interests.length === 0 ? (
+                {interestOptions.length === 0 ? (
                   <span className="muted">Chưa có dữ liệu sở thích từ DB</span>
                 ) : (
-                  dashboard.profile.interests.map((interest) => {
+                  interestOptions.map((interest) => {
                     const isSelected = draft.interests.includes(interest)
                     return (
                       <button

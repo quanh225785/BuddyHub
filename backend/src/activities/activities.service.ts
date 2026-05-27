@@ -176,7 +176,7 @@ export class ActivitiesService {
   async findAll(query: GetActivitiesQueryDto) {
     try {
       const keyword = this.getKeyword(query);
-      const categoryName = this.getFilterCategoryName(query);
+      const categoryNames = await this.getFilterCategoryNames(query);
       const timeRange = this.getTimeRange(query);
       const gender = this.getGender(query);
       const interestIds = await this.getInterestIds(query);
@@ -195,8 +195,8 @@ export class ActivitiesService {
         ];
       }
 
-      if (categoryName) {
-        where.category = { name: categoryName };
+      if (categoryNames && categoryNames.length > 0) {
+        where.category = { name: { in: categoryNames } };
       }
 
       if (timeRange) {
@@ -360,7 +360,7 @@ export class ActivitiesService {
   ) {
     let uploadedImage: UploadedCloudinaryImage | undefined;
     try {
-      const input = this.validateCreateActivity(dto);
+      const input = await this.validateCreateActivity(dto);
 
       if (input.interestIds.length > 0) {
         const found = await this.prisma.interestTag.findMany({
@@ -372,16 +372,19 @@ export class ActivitiesService {
         }
       }
 
-      const category = await this.prisma.activityCategory.upsert({
+      const category = await this.prisma.activityCategory.findUnique({
         where: { name: input.categoryName },
-        update: {},
-        create: { name: input.categoryName },
+        select: { id: true },
       });
 
       if (imageFile) {
         uploadedImage =
           await this.cloudinaryService.uploadActivityImage(imageFile);
       }
+      if (!category) {
+        throw this.error();
+      }
+
 
       await this.prisma.activity.create({
         data: {
@@ -497,10 +500,10 @@ export class ActivitiesService {
     }
   }
 
-  private validateCreateActivity(
+  private async validateCreateActivity(
     dto: CreateActivityDto,
-  ): ValidatedActivityInput {
-    const categoryName = this.getCreateCategoryName(dto);
+  ): Promise<ValidatedActivityInput> {
+    const categoryName = await this.getCreateCategoryName(dto);
     const title = this.getRequiredString(dto, [
       'title',
       'name',
@@ -589,21 +592,31 @@ export class ActivitiesService {
     return keyword;
   }
 
-  private getFilterCategoryName(query: GetActivitiesQueryDto) {
-    const rawCategory = this.getOptionalString(query, [
+  private async getFilterCategoryNames(query: GetActivitiesQueryDto) {
+    const rawValue = this.findFirstValue(query, [
       'category',
       'type',
       'activityType',
     ]);
-    if (!rawCategory) return undefined;
+    if (rawValue === undefined) return undefined;
 
-    const normalized = this.normalize(rawCategory);
-    if (ALL_CATEGORY_VALUES.has(normalized)) return undefined;
+    const values = this.parseStringArray(rawValue);
+    if (values.length === 0) return undefined;
 
-    return this.getAllowedCategoryName(normalized);
+    const resolved = new Set<string>();
+    for (const value of values) {
+      const normalized = this.normalize(value);
+      if (ALL_CATEGORY_VALUES.has(normalized)) {
+        return undefined;
+      }
+      const name = await this.resolveCategoryName(value, normalized);
+      if (name) resolved.add(name);
+    }
+
+    return resolved.size > 0 ? Array.from(resolved) : undefined;
   }
 
-  private getCreateCategoryName(dto: CreateActivityDto) {
+  private async getCreateCategoryName(dto: CreateActivityDto) {
     const rawCategory = this.getRequiredString(dto, [
       'type',
       'category',
@@ -611,16 +624,20 @@ export class ActivitiesService {
       'activityType',
     ]);
 
-    return this.getAllowedCategoryName(this.normalize(rawCategory));
+    return this.resolveCategoryName(rawCategory, this.normalize(rawCategory));
   }
 
-  private getAllowedCategoryName(normalizedCategory: string) {
-    const categoryName = CATEGORY_ALIASES.get(normalizedCategory);
-    if (!categoryName) {
-      throw this.error();
-    }
+  private async resolveCategoryName(rawCategory: string, normalized: string) {
+    const aliased = CATEGORY_ALIASES.get(normalized);
+    if (aliased) return aliased;
 
-    return categoryName;
+    const direct = await this.prisma.activityCategory.findFirst({
+      where: { name: { equals: rawCategory.trim(), mode: 'insensitive' } },
+      select: { name: true },
+    });
+    if (direct) return direct.name;
+
+    throw this.error();
   }
 
   private getTimeRange(query: GetActivitiesQueryDto) {

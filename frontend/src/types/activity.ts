@@ -1,13 +1,4 @@
-export const ACTIVITY_CATEGORIES = [
-  'Ăn uống',
-  'Học nhóm',
-  'Board Games',
-  'Thể thao',
-  'Giao lưu',
-  'Khác',
-] as const
-
-export type ActivityCategory = (typeof ACTIVITY_CATEGORIES)[number]
+export type ActivityCategory = string
 
 /** Giới hạn giới tính khi đăng ký (payload tạo hoạt động) */
 export type ActivityGenderRequirement = 'male' | 'female' | 'all'

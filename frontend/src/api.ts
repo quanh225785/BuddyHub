@@ -52,6 +52,11 @@ export async function fetchInterests() {
   return response.data
 }
 
+export async function fetchCategories() {
+  const response = await api.get('/categories')
+  return response.data
+}
+
 export async function login(payload: AuthLoginPayload) {
   const response = await api.post('/auth/login', payload)
   return response.data
@@ -124,12 +129,23 @@ export async function createActivity(payload: CreateActivityPayload) {
 
 export type FetchActivitiesParams = {
   keyword?: string
-  category?: string
+  category?: string | string[]
   time?: string
 }
 
 export async function fetchActivities(params?: FetchActivitiesParams) {
-  const response = await api.get<ActivityListItem[]>('/activities', { params })
+  const serialized: Record<string, string> = {}
+
+  if (params?.keyword) serialized.keyword = params.keyword
+  if (params?.time) serialized.time = params.time
+  if (params?.category !== undefined) {
+    const value = Array.isArray(params.category)
+      ? params.category.join(',')
+      : params.category
+    if (value) serialized.category = value
+  }
+
+  const response = await api.get<ActivityListItem[]>('/activities', { params: serialized })
   return response.data
 }
 

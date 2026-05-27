@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useRef, useState } from 'react'
-import { createActivity } from '../api'
+import { createActivity, fetchCategories } from '../api'
 import { CreateActivityScreen } from '../components/activities/CreateActivityScreen'
 import { AppNav } from '../components/layout/AppNav'
 import { getApiErrorMessage } from '../lib/errors'
@@ -30,12 +30,35 @@ export default function CreateActivityPage() {
   const [errors, setErrors] = useState<FieldErrors>({})
   const [banner, setBanner] = useState<Banner>(null)
   const [loading, setLoading] = useState(false)
+  const [categories, setCategories] = useState<string[]>([])
   const redirectTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null)
 
   useEffect(() => {
     const token = localStorage.getItem('access_token')
     if (!token) {
       navigate('/auth/login')
+    }
+  }, [])
+
+  useEffect(() => {
+    let alive = true
+    const load = async () => {
+      try {
+        const data = await fetchCategories()
+        const items = data?.categories
+        if (!alive || !Array.isArray(items)) return
+        setCategories(
+          items.filter(
+            (value: unknown): value is string => typeof value === 'string' && value.trim().length > 0,
+          ),
+        )
+      } catch {
+        if (alive) setCategories([])
+      }
+    }
+    void load()
+    return () => {
+      alive = false
     }
   }, [])
 
@@ -144,6 +167,7 @@ export default function CreateActivityPage() {
             errors={errors}
             loading={loading}
             banner={banner}
+            categories={categories}
             onChange={handleChange}
             onSubmit={handleSubmit}
             onCancel={handleCancel}

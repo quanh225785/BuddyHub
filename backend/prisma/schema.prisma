@@ -112,6 +112,7 @@ model EmailVerificationCode {
 model ActivityCategory {
   id          String  @id @default(uuid())
   name        String  @unique  // Tên danh mục, ví dụ: "Học nhóm"
+  key         String  @unique  // Kebab-case English key for code/URLs
   description String?
 
   createdAt DateTime @default(now())
@@ -133,6 +134,7 @@ model ActivityCategory {
 model InterestTag {
   id        String   @id @default(uuid())
   name      String   @unique  // Ví dụ: "Cờ vua", "Âm nhạc", "Lập trình"
+  key       String   @unique  // Kebab-case English key for code/URLs
   createdAt DateTime @default(now())
 
   // [n-n] Tag này được gắn với nhiều user (qua UserInterest)

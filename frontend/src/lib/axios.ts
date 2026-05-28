@@ -1,8 +1,10 @@
 import axios from 'axios';
 import { clearAccessToken, getAccessToken, isAccessTokenValid, loginPath } from './auth';
 
+const defaultApiBaseUrl = import.meta.env.PROD ? '/_/backend/api' : 'http://localhost:3000/api';
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api',
+  baseURL: import.meta.env.VITE_API_URL || defaultApiBaseUrl,
   withCredentials: true,
 });
 

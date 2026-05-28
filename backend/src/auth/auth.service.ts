@@ -2,14 +2,13 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
-  OnModuleInit,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { randomInt } from 'crypto';
 import { Gender } from '@prisma/client';
 
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import * as nodemailer from 'nodemailer';
 import { PrismaService } from '../prisma/prisma.service';
 import { SendOtpDto } from './dto/send-otp.dto';
@@ -23,17 +22,18 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 const HUST_LOCAL_REGEX = /^[a-zA-Z]+\.[a-zA-Z]+\d{6,7}$/;
 
 @Injectable()
-export class AuthService implements OnModuleInit {
-  private transporter!: nodemailer.Transporter;
+export class AuthService {
+  private transporter?: nodemailer.Transporter;
 
   constructor(
     private prisma: PrismaService,
     private jwt: JwtService,
   ) {}
 
-  onModuleInit() {
+  private getTransporter() {
+    if (this.transporter) return this.transporter;
     if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS || !process.env.SMTP_FROM) {
-      throw new Error('Thiếu cấu hình SMTP (SMTP_HOST, SMTP_USER, SMTP_PASS, SMTP_FROM)');
+      throw new InternalServerErrorException('Missing SMTP config (SMTP_HOST, SMTP_USER, SMTP_PASS, SMTP_FROM)');
     }
     this.transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
@@ -44,6 +44,8 @@ export class AuthService implements OnModuleInit {
         pass: process.env.SMTP_PASS,
       },
     });
+
+    return this.transporter;
   }
 
   // ----------------------------------------------------------------
@@ -292,10 +294,10 @@ export class AuthService implements OnModuleInit {
   }
 
   // ----------------------------------------------------------------
-  // Gửi email chứa OTP (dùng singleton transporter khởi tạo từ onModuleInit)
+  // Gửi email chứa OTP
   // ----------------------------------------------------------------
   private async sendOtpEmail(to: string, otp: string) {
-    await this.transporter.sendMail({
+    await this.getTransporter().sendMail({
       from: `"BuddyHub" <${process.env.SMTP_FROM}>`,
       to,
       subject: 'Mã xác thực BuddyHub',

@@ -1,0 +1,18 @@
+{
+  "experimentalServices": {
+    "frontend": {
+      "entrypoint": "frontend",
+      "routePrefix": "/",
+      "framework": "vite"
+    },
+    "backend": {
+      "entrypoint": "backend",
+      "routePrefix": "/_/backend",
+      "framework": "nestjs",
+      "includeFiles": [
+        "backend/node_modules/**",
+        "backend/prisma/schema.prisma"
+      ]
+    }
+  }
+}

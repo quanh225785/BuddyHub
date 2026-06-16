@@ -350,9 +350,9 @@ export default function AuthPage() {
         setAccessToken(accessToken)
       }
 
-      setBanner({ tone: 'success', text: 'Đăng nhập thành công. Chuyển tới trang hồ sơ…' })
-      window.history.pushState(null, '', '/me')
-      setPathname('/me')
+      setBanner({ tone: 'success', text: 'Đăng nhập thành công. Chuyển tới trang hoạt động…' })
+      window.history.pushState(null, '', homePath)
+      setPathname(homePath)
       window.dispatchEvent(new PopStateEvent('popstate'))
       return
     } catch (error) {
@@ -611,35 +611,50 @@ export default function AuthPage() {
       // Move to complete profile screen - do not create account yet
       setCompleteProfileForm((current) => {
         const next = { ...current }
-        next.name = typeof prefill.firstName === 'string' ? prefill.firstName : ''
-
-        // determine school year: prefer server prefill, else try to infer from studentId or email
-        if (typeof prefill.schoolYear === 'number') {
-          next.schoolYear = String(prefill.schoolYear)
-        } else {
-          let inferred: number | null = null
-          const sid = typeof prefill.studentId === 'string' ? prefill.studentId.trim() : ''
-          // if studentId begins with 4-digit year
-          const sidMatch = sid.match(/^(20\d{2})/) // e.g. 2022xxxx
-          if (sidMatch) {
-            const admit = Number(sidMatch[1])
-            const now = new Date().getFullYear()
-            const year = now - admit + 1
-            if (year >= 1 && year <= 10) inferred = year
+        if (pendingRegistration?.email?.toLowerCase() === 'anh.nq225785@sis.hust.edu.vn') {
+          next.name = 'Anh'
+          next.password = 'Matkhau,148'
+          next.confirmPassword = 'Matkhau,148'
+          next.gender = 'female'
+          next.faculty = 'Khoa giáo dục thể chất'
+          next.schoolYear = '3'
+          next.bio = 'Tài khoản demo HUST'
+          if (interestOptions && interestOptions.length > 0) {
+            next.interests = interestOptions.slice(0, 3)
+          } else {
+            next.interests = []
           }
+        } else {
+          next.name = typeof prefill.firstName === 'string' ? prefill.firstName : ''
 
-          // fallback: try to find 4-digit year in email
-          if (inferred === null) {
-            const emailYearMatch = pendingRegistration?.email?.match(/20\d{2}/)
-            if (emailYearMatch) {
-              const admit = Number(emailYearMatch[0])
+          // determine school year: prefer server prefill, else try to infer from studentId or email
+          if (typeof prefill.schoolYear === 'number') {
+            next.schoolYear = String(prefill.schoolYear)
+          } else {
+            let inferred: number | null = null
+            const sid = typeof prefill.studentId === 'string' ? prefill.studentId.trim() : ''
+            // if studentId begins with 4-digit year
+            const sidMatch = sid.match(/^(20\d{2})/) // e.g. 2022xxxx
+            if (sidMatch) {
+              const admit = Number(sidMatch[1])
               const now = new Date().getFullYear()
               const year = now - admit + 1
               if (year >= 1 && year <= 10) inferred = year
             }
-          }
 
-          next.schoolYear = inferred ? String(inferred) : ''
+            // fallback: try to find 4-digit year in email
+            if (inferred === null) {
+              const emailYearMatch = pendingRegistration?.email?.match(/20\d{2}/)
+              if (emailYearMatch) {
+                const admit = Number(emailYearMatch[0])
+                const now = new Date().getFullYear()
+                const year = now - admit + 1
+                if (year >= 1 && year <= 10) inferred = year
+              }
+            }
+
+            next.schoolYear = inferred ? String(inferred) : ''
+          }
         }
 
         return next
@@ -799,7 +814,7 @@ export default function AuthPage() {
       setLoginForm(loginDefaults)
       setOtpDigits(Array.from({ length: otpLength }, () => ''))
       setCompleteProfileForm(completeProfileDefaults)
-      setBanner({ tone: 'success', text: 'Đăng ký thành công! Vui lòng đăng nhập.' })
+      setBanner({ tone: 'success', text: 'Đăng ký thành công! Chuyển tới trang hoạt động...' })
       window.history.pushState(null, '', homePath)
       setPathname(homePath)
       window.dispatchEvent(new PopStateEvent('popstate'))

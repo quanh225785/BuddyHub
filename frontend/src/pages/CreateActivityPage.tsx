@@ -26,6 +26,18 @@ const initialForm: CreateActivityForm = {
   description: '',
 }
 
+function getCurrentUserEmail(): string | null {
+  const token = localStorage.getItem('access_token')
+  if (!token) return null
+  try {
+    const b64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+    const payload = JSON.parse(atob(b64))
+    return (payload.email ?? null) as string | null
+  } catch {
+    return null
+  }
+}
+
 export default function CreateActivityPage() {
   const [form, setForm] = useState<CreateActivityForm>(initialForm)
   const [errors, setErrors] = useState<FieldErrors>({})
@@ -37,6 +49,31 @@ export default function CreateActivityPage() {
   useEffect(() => {
     if (!isAccessTokenValid()) {
       navigate(loginPath)
+      return
+    }
+
+    const email = getCurrentUserEmail()
+    if (email === 'anh.nq225785@sis.hust.edu.vn') {
+      const tomorrow = new Date()
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      const dateStr = tomorrow.toISOString().split('T')[0]
+      const deadlineStr = `${dateStr}T10:00`
+
+      setForm({
+        category: 'Ăn uống',
+        title: 'Cơm trưa C1 nhé các bạn',
+        location: 'Nhà ăn C1 - Bách Khoa',
+        imageFile: null,
+        date: dateStr,
+        startTime: '11:30',
+        endTime: '13:00',
+        maxSlots: '4',
+        purpose: 'Ăn trưa và làm quen bạn mới',
+        gender: 'all',
+        deadline: deadlineStr,
+        chatLink: 'https://t.me/buddyhub_demo',
+        description: 'Mọi người cùng tập trung ăn trưa ở C1 nhé, gặp nhau ở tầng 1 lúc 11h30.',
+      })
     }
   }, [])
 

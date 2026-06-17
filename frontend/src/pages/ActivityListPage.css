@@ -315,18 +315,26 @@
 .activity-browse-card {
   display: grid;
   gap: 12px;
+  min-width: 0;
   padding: 18px;
   border-radius: 20px;
   background: #fff;
   border: 1px solid #efe0d0;
   box-shadow: 0 10px 26px rgba(136, 96, 55, 0.06);
+  overflow: hidden;
 }
 
 .activity-browse-image {
+  display: block;
+  inline-size: 100%;
+  block-size: clamp(150px, 15vw, 190px);
   width: 100%;
+  height: clamp(150px, 15vw, 190px);
+  max-width: 100%;
   aspect-ratio: 16 / 9;
   border-radius: 16px;
   object-fit: cover;
+  object-position: center;
   background: #f2ece6;
 }
 
@@ -382,10 +390,12 @@
 
 .activity-browse-title {
   margin: 0;
+  min-width: 0;
   font-size: 1.08rem;
   font-weight: 800;
   line-height: 1.35;
   color: #2e3137;
+  overflow-wrap: anywhere;
 }
 
 .activity-browse-host {
@@ -418,9 +428,15 @@
   padding: 0;
   list-style: none;
   display: grid;
+  min-width: 0;
   gap: 6px;
   color: #8b94a8;
   font-size: 0.88rem;
+}
+
+.activity-browse-meta li {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .activity-browse-progress {
@@ -439,6 +455,7 @@
 
 .activity-browse-summary {
   margin: 0;
+  min-width: 0;
   color: #6d7588;
   font-size: 0.88rem;
   line-height: 1.5;
@@ -446,6 +463,7 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  overflow-wrap: anywhere;
 }
 
 .activity-browse-actions {
@@ -522,5 +540,10 @@
 
   .activity-browse-grid {
     grid-template-columns: 1fr;
+  }
+
+  .activity-browse-image {
+    block-size: clamp(170px, 52vw, 230px);
+    height: clamp(170px, 52vw, 230px);
   }
 }

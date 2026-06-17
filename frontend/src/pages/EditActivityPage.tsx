@@ -6,6 +6,7 @@ import { LoadingState } from '../components/common/LoadingState'
 import { getApiErrorMessage } from '../lib/errors'
 import { isAccessTokenValid, loginPath } from '../lib/auth'
 import { navigate } from '../lib/navigation'
+import { resizeActivityImage } from '../lib/activityImage'
 import { hasValidCategory, validateCreateActivityForm } from '../lib/validateActivity'
 import type { ActivityDetail, Banner, CreateActivityForm, FieldErrors } from '../types/activity'
 import '../App.css'
@@ -119,27 +120,45 @@ export default function EditActivityPage({ activityId }: Props) {
     if (!form) return
     setBanner(null)
 
-    const nextErrors = validateCreateActivityForm(form)
-    setErrors(nextErrors)
-    if (Object.keys(nextErrors).length > 0) return
-    if (!hasValidCategory(form)) return
-
     setLoading(true)
+    let imageFile = form.imageFile
+    try {
+      if (imageFile) {
+        imageFile = await resizeActivityImage(imageFile)
+      }
+    } catch {
+      setBanner({ tone: 'error', text: 'KhÃ´ng thá»ƒ xá»­ lÃ½ áº£nh. Vui lÃ²ng chá»n áº£nh khÃ¡c.' })
+      setLoading(false)
+      return
+    }
+
+    const nextForm = { ...form, imageFile }
+    const nextErrors = validateCreateActivityForm(nextForm)
+    setErrors(nextErrors)
+    if (Object.keys(nextErrors).length > 0) {
+      setLoading(false)
+      return
+    }
+    if (!hasValidCategory(nextForm)) {
+      setLoading(false)
+      return
+    }
+
     try {
       await updateActivity(activityId, {
-        type: form.category,
-        name: form.title.trim(),
-        location: form.location.trim(),
-        image: form.imageFile ?? undefined,
-        date: form.date,
-        start: form.startTime,
-        end: form.endTime.trim() || undefined,
-        maxPeople: Number(form.maxSlots),
-        purpose: form.purpose.trim(),
-        deadline: new Date(form.deadline).toISOString(),
-        groupChatLink: form.chatLink.trim(),
-        gender: form.gender,
-        description: form.description.trim() || undefined,
+        type: nextForm.category,
+        name: nextForm.title.trim(),
+        location: nextForm.location.trim(),
+        image: nextForm.imageFile ?? undefined,
+        date: nextForm.date,
+        start: nextForm.startTime,
+        end: nextForm.endTime.trim() || undefined,
+        maxPeople: Number(nextForm.maxSlots),
+        purpose: nextForm.purpose.trim(),
+        deadline: new Date(nextForm.deadline).toISOString(),
+        groupChatLink: nextForm.chatLink.trim(),
+        gender: nextForm.gender,
+        description: nextForm.description.trim() || undefined,
       })
 
       setBanner({ tone: 'success', text: 'Cập nhật thành công! Đang chuyển tới trang chi tiết...' })

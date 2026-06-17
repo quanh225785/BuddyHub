@@ -5,7 +5,7 @@ export function hasValidCategory(form: CreateActivityForm): form is CreateActivi
 }
 
 const DESCRIPTION_MAX = 500
-const IMAGE_MAX_BYTES = 5 * 1024 * 1024
+export const ACTIVITY_IMAGE_MAX_BYTES = 5 * 1024 * 1024
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
 
 function pad2(value: number) {
@@ -92,7 +92,7 @@ export function validateCreateActivityForm(form: CreateActivityForm): FieldError
   if (form.imageFile) {
     if (!ALLOWED_IMAGE_TYPES.has(form.imageFile.type)) {
       errors.imageFile = 'Ảnh chỉ hỗ trợ JPG, PNG, WEBP hoặc GIF'
-    } else if (form.imageFile.size > IMAGE_MAX_BYTES) {
+    } else if (form.imageFile.size > ACTIVITY_IMAGE_MAX_BYTES) {
       errors.imageFile = 'Ảnh hoạt động tối đa 5MB'
     }
   }

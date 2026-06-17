@@ -49,8 +49,10 @@ export function ActivityBrowseCard({ activity, userGender }: ActivityBrowseCardP
 
   return (
     <article className="activity-browse-card">
-      {activity.imageUrl && (
+      {activity.imageUrl ? (
         <img src={activity.imageUrl} alt="" className="activity-browse-image" loading="lazy" />
+      ) : (
+        <div className="activity-browse-image activity-browse-image-placeholder" aria-hidden />
       )}
 
       <div className="activity-browse-card-top">
